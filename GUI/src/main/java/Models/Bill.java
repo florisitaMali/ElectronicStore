@@ -84,7 +84,7 @@ public class Bill implements Serializable{
                 ItemsDAO.deleteItem(i);
                 //Change the quantity of the item
                 i.setQuantity(i.getQuantity() + s.getSoldQuantity());
-                ItemsDAO.addItemToFile(i);
+                ItemsDAO.addItem(i);
                 soldItems.remove(s);
                 totalPrice -= s.getSoldQuantity() * s.getSellingPrice();
                 return;
@@ -98,7 +98,7 @@ public class Bill implements Serializable{
         Item i = ItemsDAO.searchItem(s.getItemName());
         ItemsDAO.deleteItem(i);
         i.setQuantity(i.getQuantity() - s.getSoldQuantity());
-        ItemsDAO.addItemToFile(i);
+        ItemsDAO.addItem(i);
     }
 
     public String printBill() {

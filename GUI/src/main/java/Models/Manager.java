@@ -2,7 +2,6 @@ package Models;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class Manager extends Employee {
     private ArrayList<Sector> sectors = new ArrayList<>();
@@ -16,6 +15,10 @@ public class Manager extends Employee {
         super(name, surname, username, psw, email, phoneNr,dateOfBirth, salary, Role.MANAGER);
     }
 
-    public void addSector(Sector s){ sectors.add(s);}
-    public ArrayList<Sector> getSectors(){ return sectors;}
+    public void addSector(Sector s){
+        System.out.println(s);
+        sectors.add(s);}
+    public ArrayList<Sector> getSectors(){
+        System.out.println(sectors);
+        return sectors;}
 }

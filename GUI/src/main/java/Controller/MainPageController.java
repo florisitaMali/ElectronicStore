@@ -21,6 +21,7 @@ public class MainPageController {
         setManagerButtonAction();
         setAdministratorButtonAction();
     }
+
     private void setCashierButtonAction() {
         view.getCashier().setOnAction(e -> {
             LoginView mainPage = new LoginView(Role.CASHIER);

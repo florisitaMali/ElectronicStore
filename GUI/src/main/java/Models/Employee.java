@@ -1,19 +1,16 @@
 package Models;
 
-import DAO.EmployeeDAO;
-import Views.EmployeesMainPage;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public abstract class Employee implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L; // Recommended for Serializable classes
 
     // Data fields
+    private int id;
     private String name;
     private String surname;
     private double salary;
@@ -33,7 +30,7 @@ public abstract class Employee implements Serializable {
     public Employee(String name, String surname, String username, String psw, String email, String phoneNr, LocalDate dateOfBirth, double salary, Role role) throws NotValidUsername {
         this.name = name;
         this.surname = surname;
-        setUsername(username);
+        this.username = username;
         setPassword(psw);
         this.salary = salary;
         this.dateOfBirth = dateOfBirth;
@@ -116,11 +113,12 @@ public abstract class Employee implements Serializable {
         password = psw;
     }
 
-    public void setUsername(String usN) throws NotValidUsername {
-        Employee emp = EmployeeDAO.searchEmployee(usN, role);
-        if (emp != null && emp.getUsername().equals(usN))
-            throw new NotValidUsername("There exist an employee with this username.");
-        this.username = usN;
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     @Override

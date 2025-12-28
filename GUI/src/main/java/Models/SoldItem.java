@@ -4,6 +4,7 @@ import DAO.ItemsDAO;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
 
 public class SoldItem extends Item implements Serializable {
     @Serial
@@ -20,11 +21,6 @@ public class SoldItem extends Item implements Serializable {
             throw new ItemNotAvailableException("Item not available: " + i.getItemName() + "\nQuantity avalable: " + i.getQuantity() + "\n Quantity requested: " + sq);
         }
 
-        //Update the item quantity
-        setQuantity(i.getQuantity());
-        i.setQuantity(i.getQuantity() - sq);
-
-        //Initialize SoldItem properties
         setItemName(i.getItemName());
         setItemCategory(i.getItemCategory());
         setItemSupplier(i.getItemSupplier());
@@ -32,8 +28,21 @@ public class SoldItem extends Item implements Serializable {
         setPurchasedPrice(i.getPurchasedPrice());
         setSellingPrice(i.getSellingPrice());
 
-        //Set the sold quantity
-        setSoldQuantity(sq);
+        soldQuantity = sq;
+    }
+
+    public SoldItem(
+            String name,
+            int soldQty,
+            double sellingPrice,
+            double purchasedPrice,
+            LocalDate purchasedDate
+    ) {
+        setItemName(name);
+        setSellingPrice(sellingPrice);
+        setPurchasedPrice(purchasedPrice);
+        setPurchasedDate(purchasedDate);
+        this.soldQuantity = soldQty;
     }
 
     public int getSoldQuantity() {

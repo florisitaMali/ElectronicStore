@@ -1,7 +1,5 @@
 package Models;
 
-import DAO.ItemsDAO;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -10,6 +8,7 @@ public class Item implements Serializable {
     @Serial
     private static final long serialVersionUID = 0L;
 
+    private int id;
     private String itemName;
     private int quantity;
     private Category category;
@@ -93,6 +92,14 @@ public class Item implements Serializable {
     // Utility Method
     public boolean isOutOfStock() {
         return this.quantity < stockLimit;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     @Override

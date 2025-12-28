@@ -106,8 +106,7 @@ public class AdminManageEmployeesController {
                 //Show the dialog and wait for the result
                 dialog.showAndWait().ifPresent(updatedEmployee -> {
                     if(updatedEmployee != null) {
-                        EmployeeDAO.deleteEmployee(selectedEmployee);
-                        EmployeeDAO.addEmployee(updatedEmployee);
+                        EmployeeDAO.updateEmployee(updatedEmployee);
                         view.getEmployeeTable().setItems(FXCollections.observableArrayList(EmployeeDAO.getEmployees()));
                         view.getEmployeeTable().refresh();
                     }

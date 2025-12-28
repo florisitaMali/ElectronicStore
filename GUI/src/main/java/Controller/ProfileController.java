@@ -48,7 +48,6 @@ public class ProfileController {
                     try {
                         if (profile.getCurrentUser() instanceof Administrator) {
                             Administrator admin = EmployeeDAO.getAdministrator();
-                            admin.setUsername(newUsername);
                             profile.getUsername().setText(admin.getUsername());
                             EmployeeDAO.addAdministrator(admin);
                             Administrator newO = EmployeeDAO.getAdministrator();
@@ -58,7 +57,6 @@ public class ProfileController {
                         } else {
                             Employee emp = EmployeeDAO.searchEmployee(profile.getCurrentUser().getUsername(), profile.getCurrentUser().getRole());
                             EmployeeDAO.deleteEmployee(emp);
-                            emp.setUsername(newUsername);
                             EmployeeDAO.addEmployee(emp);
                             profile.setCurrentUser(emp);
                             profile.getUsername().setText(emp.getUsername());

@@ -146,7 +146,7 @@ public class GenerateBillController {
         try (FileWriter writer = new FileWriter(fileName)) {
             writer.write(bill.printBill());
             System.out.println(bill.printBill());
-            BillDAO.addBillToFile(bill);
+            BillDAO.saveBill(bill);
             System.out.println("Done");
         } catch (IOException ex) {
             ShowAlert.showAlert("Error", "Error writing bill to file: " + ex.getMessage());

@@ -3,102 +3,144 @@ package DAO;
 import Models.Category;
 import Models.Item;
 import Models.Sector;
+import Models.Supplier;
 
-import java.io.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CategoryDAO {
-    public static final File CATEGORY_FILE = new File("src/main/resources/com/example/gui/Categories.dat");
 
-    public static ArrayList<Category> getCategories()
-    {
+    public static ArrayList<Category> getCategories() {
         ArrayList<Category> categories = new ArrayList<>();
+        String sql = "SELECT *, sec.name AS sectori FROM categories JOIN sectors sec ON categories.sector = sec.id";
 
-        if (!CATEGORY_FILE.exists() || CATEGORY_FILE.length() == 0) {
-            System.out.println("This file does not exist, or it does not have any category.");
-            try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(CATEGORY_FILE))) {
-                addCategory(new Category("Laptop", Sector.COMPUTERS));
-                addCategory(new Category("TV", Sector.HOME_ENTERTAINMENT));
-                addCategory(new Category("Camera", Sector.CAMERA));
-                addCategory(new Category("Mobile Device", Sector.MOBILE_DEVICES));
-                addCategory(new Category("PlayStation", Sector.HOME_ENTERTAINMENT));
-            } catch (IOException e) {
-                System.out.println(e.getMessage());
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                categories.add(new Category(
+                        rs.getString("name"),
+                        Sector.valueOf(rs.getString("sectori"))
+                ));
             }
-        }
-        try (FileInputStream employeeFile = new FileInputStream(CATEGORY_FILE);
-             ObjectInputStream input = new ObjectInputStream(employeeFile)){
-            categories = (ArrayList<Category>) input.readObject();
-        } catch (ClassNotFoundException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return categories;
     }
 
     public static void addCategory(Category c) {
-        ArrayList<Category> categories = getCategories();
-        categories.add(c);
-        try (FileOutputStream employeeFile = new FileOutputStream(CATEGORY_FILE, false);
-             ObjectOutputStream input = new ObjectOutputStream(employeeFile)){
-            input.writeObject(categories);
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+        String sql = "INSERT INTO categories(name, sector) VALUES (?, ?)";
+
+        String sectorIdQuery = "SELECT id FROM sectors WHERE name = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             PreparedStatement sectorPs = con.prepareStatement(sectorIdQuery)) {
+            sectorPs.setString(1, c.getSector().name());
+            ResultSet rs = sectorPs.executeQuery();
+            if (rs.next()) {
+                int sectorId = rs.getInt("id");
+                ps.setString(1, c.getName());
+                ps.setInt(2, sectorId);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+    }
+
+    public static List<Category> getSectorCategory(List<Sector> sector) {
+        List<Category> categories = new ArrayList<>();
+        String sql = "SELECT * FROM categories WHERE sector = ?";
+        String sectorIdQuery = "SELECT id FROM sectors WHERE name = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             PreparedStatement sectorPs = con.prepareStatement(sectorIdQuery)) {
+
+            for (Sector s : sector) {
+                sectorPs.setString(1, s.name());
+                ResultSet rsSector = sectorPs.executeQuery();
+                if (rsSector.next()) {
+                    int sectorId = rsSector.getInt("id");
+                    ps.setInt(1, sectorId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            categories.add(new Category(
+                                    rs.getString("name"),
+                                    s
+                            ));
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return categories;
     }
 
     public static void deleteCategory(Category c) {
-        ArrayList<Category> categories = getCategories();
-        System.out.println(categories.contains(c));
-        categories.remove(c);
-        try (FileOutputStream employeeFile = new FileOutputStream(CATEGORY_FILE, false);
-             ObjectOutputStream input = new ObjectOutputStream(employeeFile)){
-            input.writeObject(categories);
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+        String sql = "DELETE FROM categories WHERE name = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, c.getName());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    public static ArrayList<Item> getSectorsItems(Sector se)
-    {
-        ArrayList<Category> categories = CategoryDAO.getCategories();
-        ArrayList<Item> temp = new ArrayList<>();
+    public static List<Item> getSectorsItems(Sector se) {
+        List<Item> items = new ArrayList<>();
+        String sql = """
+                    SELECT i.*, c.name AS category_name, c.sector, sec.name AS sectori
+                    FROM items i
+                    JOIN categories c ON i.category_id = c.id
+                    JOIN sectors sec ON c.sector = sec.id
+                    WHERE sec.name = ?
+                """;
+        System.out.println("SQL Query: " + sql); // Debugging line to check the SQL query
 
-        for(Category c: categories)
-        {
-            if(c.getSector().equals(se))
-                temp.addAll(c.getItemsInThisCategory());
-        }
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
-        return temp;
-    }
+            ps.setString(1, se.name());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Category category = new Category(
+                            rs.getString("category_name"),
+                            Sector.valueOf(rs.getString("sectori"))
+                    );
+                    System.out.println("Category fetched: " + category.getName() + ", Sector: " + category.getSector()); // Debugging line
 
-    public static ArrayList<Category> getSectorCategory(ArrayList<Sector> sectors)
-    {
-        ArrayList<Category> categories = CategoryDAO.getCategories();
-        ArrayList<Category> temp = new ArrayList<>();
+                    Supplier supplier = SuppliersDAO.getSupplierById(rs.getInt("supplier_id"));
+                    long stockLimit = rs.getLong("stock_limit");
+                    double sellingPrice = rs.getDouble("selling_price");
+                    double purchasedPrice = rs.getDouble("purchased_price");
 
-        for(Sector s: sectors) {
-            for (Category c : categories) {
-                if (c.getSector().equals(s))
-                    temp.add(c);
+                    System.out.println("Item fetched: " + rs.getString("name") + ", Quantity: " + rs.getInt("quantity")); // Debugging line
+                    items.add(new Item(
+                            rs.getString("name"),
+                            rs.getInt("quantity"),
+                            category,
+                            supplier,
+                            purchasedPrice,
+                            sellingPrice,
+                            stockLimit
+                    ));
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        System.out.println("hereeee");
-        return temp;
-    }
-
-    public static Category searchCategory(String s)
-    {
-        ArrayList<Category> categories = CategoryDAO.getCategories();
-        for(Category c: categories)
-        {
-            if(c.getName().equals(s))
-            {
-                return c;
-            }
-        }
-        return null;
+        return items;
     }
 }

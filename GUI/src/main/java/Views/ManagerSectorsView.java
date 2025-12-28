@@ -2,7 +2,10 @@ package Views;
 
 import Controller.ManagerSectorsController;
 import DAO.CategoryDAO;
-import Models.*;
+import Models.Employee;
+import Models.Item;
+import Models.Manager;
+import Models.Sector;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,20 +15,19 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
-import java.net.PortUnreachableException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class ManagerSectorsView extends View {
     ManagerSectorsController controller;
     private final TableView<Item> inventoryTable = new TableView<>();
-    private ArrayList<Item> itemList = new ArrayList<>();
+    private List<Item> itemList = new ArrayList<>();
     private final BorderPane mainLayout = new BorderPane();
     private final ObservableList<Sector> sectors;
     private final ComboBox<Sector> sectorComboBox;
@@ -43,7 +45,7 @@ public class ManagerSectorsView extends View {
     public TableView<Item> getInventoryTable() {
         return inventoryTable;
     }
-    public ArrayList<Item> getItemList() {
+    public List<Item> getItemList() {
         return itemList;
     }
     public BorderPane getMainLayout() {
@@ -89,6 +91,7 @@ public class ManagerSectorsView extends View {
     public ManagerSectorsView(Employee emp)
     {
         sectors = FXCollections.observableArrayList(((Manager) getCurrentUser()).getSectors());
+        System.out.println(sectors);
         sectorComboBox = new ComboBox<>(sectors);
         controller = new ManagerSectorsController(this);
         setView();
@@ -202,6 +205,8 @@ public class ManagerSectorsView extends View {
 
     public void loadData(Sector se) {
         itemList = CategoryDAO.getSectorsItems(se);
+        System.out.println(itemList);
+        System.out.println(se);
         inventoryTable.getItems().setAll(itemList);
         isLowStock();
     }

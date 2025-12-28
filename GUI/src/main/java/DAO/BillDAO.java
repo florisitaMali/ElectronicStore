@@ -1,181 +1,246 @@
 package DAO;
 
-import Models.*;
+import Models.Bill;
+import Models.Employee;
+import Models.Role;
+import Models.SoldItem;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class BillDAO {
-    public static final File BILLS_FILE = new File("src/main/resources/com/example/gui/Bills.dat");
 
-    public static ArrayList<Bill> getAllBills()
-    {
-        ArrayList<Bill> bills= new ArrayList<>();
-        if (!BILLS_FILE.exists()) {
-            return null;
+    private static final String BILL_FILES_DIR =
+            "src/main/resources/com/example/gui/bills/";
+
+    /* ===================== SAVE BILL ===================== */
+
+    public static void saveBill(Bill bill) {
+        if(bill.getTotalPrice() <= 0) return;
+        Connection con = null;
+
+        try {
+            con = DBConnection.getConnection();
+            con.setAutoCommit(false);
+
+            String billSql = """
+                INSERT INTO bills (bill_number, sale_date, employee_id, total)
+                VALUES (?, ?, ?, ?)
+            """;
+
+            int billId;
+            try (PreparedStatement ps =
+                         con.prepareStatement(billSql, Statement.RETURN_GENERATED_KEYS)) {
+
+                ps.setLong(1, bill.getBillNumber());
+                ps.setTimestamp(2, Timestamp.valueOf(bill.getSaleDate()));
+                ps.setInt(3, getEmployeeId(con, bill.getEmployee()));
+                ps.setDouble(4, bill.getTotalPrice());
+
+                ps.executeUpdate();
+
+                ResultSet keys = ps.getGeneratedKeys();
+                if (!keys.next()) {
+                    throw new SQLException("Failed to create bill");
+                }
+                billId = keys.getInt(1);
+            }
+
+            String itemsSql = """
+                INSERT INTO bill_items (bill_id, item_id, quantity, price)
+                VALUES (?, ?, ?, ?)
+            """;
+
+            try (PreparedStatement ps = con.prepareStatement(itemsSql)) {
+                for (SoldItem s : bill.getSoldItems()) {
+                    ps.setInt(1, billId);
+                    ps.setInt(2, ItemsDAO.getItemId(s));
+                    ps.setInt(3, s.getSoldQuantity());
+                    ps.setDouble(4, s.getSellingPrice());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            con.commit();
+
+            createBillFile(bill);
+
+        } catch (Exception e) {
+            try {
+                if (con != null) con.rollback();
+            } catch (SQLException ignored) {}
+            e.printStackTrace();
+        } finally {
+            try {
+                if (con != null) con.close();
+            } catch (SQLException ignored) {}
         }
+    }
 
-        try(ObjectInputStream input = new ObjectInputStream(new FileInputStream(BILLS_FILE))) {
-            LocalDateTime lastDate = (LocalDateTime) input.readObject();
-            long nrOfBills = (long) input.readObject();
-            bills = (ArrayList<Bill>) input.readObject();
+    /* ===================== READ BILLS ===================== */
 
-        } catch (EOFException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (ClassNotFoundException e) {
-            System.out.println(e.getMessage());
+    public static ArrayList<Bill> getAllBills(LocalDate start, LocalDate end) {
+
+        ArrayList<Bill> bills = new ArrayList<>();
+
+        String sql = """
+            SELECT b.*, e.username
+            FROM bills b
+            JOIN employees e ON b.employee_id = e.id
+            WHERE DATE(b.sale_date) BETWEEN ? AND ?
+            ORDER BY b.sale_date
+        """;
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, Date.valueOf(start));
+            ps.setDate(2, Date.valueOf(end));
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Employee emp =
+                        EmployeeDAO.searchEmployee(
+                                rs.getString("username"),
+                                Role.CASHIER
+                        );
+
+                Bill bill = new Bill(emp);
+                setBillData(bill, rs, con);
+                bills.add(bill);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return bills;
     }
 
-    public static void addBillToFile(Bill bill)
-    {
-        ArrayList<Bill> bills = BillDAO.getAllBills();
-        try(FileOutputStream billFile = new FileOutputStream(BILLS_FILE, false);
-            ObjectOutputStream output= new ObjectOutputStream(billFile);
-        )
-        {
-            if(BILLS_FILE.length() == 0)
-            {
-                output.writeObject(LocalDate.now());
-                output.writeObject(0);
-                output.writeObject(bills);
+    /* ===================== STATISTICS ===================== */
+
+    public static Map<String, Integer> getItemsSoldStatistics(
+            LocalDate start,
+            LocalDate end) {
+
+        Map<String, Integer> stats = new HashMap<>();
+
+        String sql = """
+            SELECT i.name, SUM(bi.quantity) qty
+            FROM bill_items bi
+            JOIN items i ON bi.item_id = i.id
+            JOIN bills b ON bi.bill_id = b.id
+            WHERE DATE(b.sale_date) BETWEEN ? AND ?
+            GROUP BY i.name
+        """;
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, Date.valueOf(start));
+            ps.setDate(2, Date.valueOf(end));
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                stats.put(rs.getString("name"), rs.getInt("qty"));
             }
-            bills.add(bill);
 
-            output.writeObject(bill.getSaleDate());
-            output.writeObject(bill.getNumberOfBill());
-            output.writeObject(bills);
-        } catch(IOException e) {
-            System.out.println(e.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return stats;
     }
 
-    public static LocalDateTime getLastDate()
-    {
-        LocalDateTime lastDate = LocalDateTime.now();
-        try(ObjectInputStream input = new ObjectInputStream(new FileInputStream(BILLS_FILE))) {
-            lastDate = (LocalDateTime) input.readObject();
-        } catch (EOFException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (ClassNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
-        return lastDate;
+    /* ===================== HELPERS ===================== */
+
+    private static void setBillData(
+            Bill bill,
+            ResultSet rs,
+            Connection con) throws SQLException {
+
+        bill.getSoldItems().addAll(getBillItems(con, rs.getInt("id")));
     }
 
-    public static long getNumberOfBills()
-    {
-        long nrOfBills = 0;
-        try(ObjectInputStream input = new ObjectInputStream(new FileInputStream(BILLS_FILE))) {
-            LocalDateTime lastDate = (LocalDateTime) input.readObject();
-            nrOfBills = (long) input.readObject();
-        } catch (EOFException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (ClassNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
-        return nrOfBills;
-    }
+    private static List<SoldItem> getBillItems(Connection con, int billId)
+            throws SQLException {
 
-    //Get Bill within a time period
-    public static ArrayList<Bill> getAllBills(LocalDate startDate, LocalDate endDate) {
-        ArrayList<Bill> bills;
-        ArrayList<Bill> billsWithinTime = new ArrayList<>();
-        if (!BILLS_FILE.exists()) {
-            return null;
-        }
-        try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(BILLS_FILE))) {
-            LocalDateTime lastDate = (LocalDateTime) input.readObject();
-            long nrOfBills = (long) input.readObject();
-            bills = (ArrayList<Bill>) input.readObject();
+        List<SoldItem> items = new ArrayList<>();
 
-            for (Bill b : bills) {
-                //Check if the date of bill generated is between the start and end date
-                if ((b.getSaleDate().toLocalDate().isAfter(startDate) || b.getSaleDate().toLocalDate().isEqual(startDate)) && (b.getSaleDate().toLocalDate().isBefore(endDate) || b.getSaleDate().toLocalDate().isEqual(endDate)))
-                    billsWithinTime.add(b);
-            }
-        } catch (EOFException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (ClassNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
-        return billsWithinTime;
-    }
+        String sql = """
+            SELECT i.name, bi.quantity, bi.price, i.purchased_price, i.purchased_date
+            FROM bill_items bi
+            JOIN items i ON bi.item_id = i.id
+            WHERE bi.bill_id = ?
+        """;
 
-    // Items sold statistics
-    //Map<K,V> is an interface / K the type of key maintained by this map (item name)/ V the value to mapped on (the quantity)
-    public static Map<String, Integer> getItemsSoldStatistics(LocalDate start, LocalDate end) {
-        ArrayList<Bill> bills = getAllBills(start, end);
-        //HashMap concrete implementation of Map
-        Map<String, Integer> itemSales = new HashMap<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, billId);
+            ResultSet rs = ps.executeQuery();
 
-        if (bills != null) {
-            for (Bill bill : bills) {
-                ArrayList<SoldItem> items = bill.getSoldItems();
-                for (Item item : items) {
-                    String itemName = item.getItemName();
-                    int quantity = item.getQuantity();
-                    //Add the item into the map
-                    itemSales.put(itemName, itemSales.getOrDefault(itemName, 0) + quantity);
-                    //If the item already exist in map it will return its old quantity and add the quantity
-                }
+            while (rs.next()) {
+                items.add(new SoldItem(
+                        rs.getString("name"),
+                        rs.getInt("quantity"),
+                        rs.getDouble("price"),
+                        rs.getDouble("purchased_price"),
+                        rs.getDate("purchased_date").toLocalDate()
+                ));
             }
         }
-        return itemSales;
+        return items;
+    }
+
+    private static int getEmployeeId(Connection con, Employee e)
+            throws SQLException {
+
+        String sql = "SELECT id FROM employees WHERE username = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, e.getUsername());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt("id");
+        }
+        throw new SQLException("Employee not found");
+    }
+
+    private static void createBillFile(Bill bill) throws IOException {
+
+        File dir = new File(BILL_FILES_DIR);
+        if (!dir.exists()) dir.mkdirs();
+
+        File file = new File(
+                BILL_FILES_DIR +
+                        "bill_" + bill.getBillNumber() + ".txt"
+        );
+
+        try (PrintWriter out = new PrintWriter(file)) {
+            out.println(bill.printBill());
+        }
+    }
+
+    /* ===================== LEGACY METHODS ===================== */
+
+    public static ArrayList<Bill> getAllBills() {
+        return new ArrayList<>();
+    }
+
+    public static LocalDateTime getLastDate() {
+        return LocalDateTime.now();
+    }
+
+    public static long getNumberOfBills() {
+        return 0;
     }
 
     public static ArrayList<Bill> getDayBills(Employee emp) {
-        ArrayList<Bill> temp = new ArrayList<>();
-        ArrayList<Bill> bills = BillDAO.getAllBills();
-        LocalDate today = LocalDate.now();
-
-        int left = 0;
-        int right = bills.size() - 1;
-
-        //Binary Search
-        while (left <= right) {
-            int mid = (left + right) / 2;
-            LocalDate dateMid = bills.get(mid).getSaleDate().toLocalDate();
-
-            if (dateMid.isBefore(today)) {
-                left = mid + 1;
-            } else if (dateMid.isAfter(today)){
-                right = mid - 1;
-            } else {
-                // Find all bills for the same date
-                int i = mid;
-                while (i >= 0 && bills.get(i).getSaleDate().toLocalDate().isEqual(today)) {
-                    if (bills.get(i).getEmployee().equals(emp)) {
-                        temp.add(bills.get(i));
-                    }
-                    i--;
-                }
-                i = mid + 1;
-                while (i < bills.size() && bills.get(i).getSaleDate().toLocalDate().isEqual(today)) {
-                    if (bills.get(i).getEmployee().equals(emp)) {
-                        temp.add(bills.get(i));
-                    }
-                    i++;
-                }
-                break;
-            }
-        }
-
-        for (Bill b : temp) {
-            System.out.println(b.getBillNumber() + "  " + b.getSaleDate());
-        }
-        return temp;
+        return getAllBills(LocalDate.now(), LocalDate.now());
     }
-
 }

@@ -13,7 +13,9 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class ManagerSectorsController {
     private ManagerSectorsView view;
@@ -69,6 +71,7 @@ public class ManagerSectorsController {
     private void addSectorComboBoxAction()
     {
         view.getSectorComboBox().setOnAction(e-> {
+            System.out.println("Sector selected: " + view.getSectorComboBox().getValue());
             Sector sector = view.getSectorComboBox().getValue();
             view.loadData(sector);
         }   );
@@ -100,7 +103,7 @@ public class ManagerSectorsController {
         dialog.showAndWait().ifPresent(item -> {
             view.getItemList().add(item);
             view.getInventoryTable().getItems().add(item);
-            ItemsDAO.addItemToFile(item);
+            ItemsDAO.addItem(item);
         });
     }
 
@@ -163,7 +166,7 @@ public class ManagerSectorsController {
                 view.getInventoryTable().getItems().set(view.getInventoryTable().getItems().indexOf(selectedItem), updatedItem);
 
                 ItemsDAO.deleteItem(selectedItem);
-                ItemsDAO.addItemToFile(updatedItem);
+                ItemsDAO.addItem(updatedItem);
             }
         });
     }
@@ -193,7 +196,7 @@ public class ManagerSectorsController {
             VBox vBox = new VBox(10);
 
             ArrayList<CheckBox> categoriesCheckBox = new ArrayList<>();
-            ArrayList<Category> categories = CategoryDAO.getSectorCategory(((Manager) view.getCurrentUser()).getSectors());
+            List<Category> categories = CategoryDAO.getSectorCategory(((Manager) view.getCurrentUser()).getSectors());
 
             for (Category category : categories) {
                 CheckBox checkBox = new CheckBox(category.getName());

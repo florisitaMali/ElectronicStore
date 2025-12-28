@@ -101,7 +101,6 @@ public class EmployeesMainPage extends View {
     }
 
     private void setView(Employee emp) {
-
         primaryPane.getChildren().add(backgroundImage);
         backgroundImage.fitHeightProperty().bind(primaryPane.heightProperty());
         backgroundImage.fitWidthProperty().bind(primaryPane.widthProperty());

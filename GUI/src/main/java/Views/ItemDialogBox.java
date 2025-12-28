@@ -37,12 +37,12 @@ public class ItemDialogBox {
         categoryBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 5;");
 
         ToggleGroup categoryToggleGroup = new ToggleGroup();
-        ArrayList<Category> categories = new ArrayList<>();
+        List<Category> categories = new ArrayList<>();
 
         if(emp instanceof Manager) {
             categories = CategoryDAO.getSectorCategory(((Manager)emp).getSectors());
         } else if(emp instanceof Cashier) {
-            ArrayList<Sector> sector = new ArrayList<>();
+            List<Sector> sector = new ArrayList<>();
             sector.add(((Cashier)emp).getSector());
             categories = CategoryDAO.getSectorCategory(sector);
         } else {
