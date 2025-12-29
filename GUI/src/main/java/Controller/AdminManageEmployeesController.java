@@ -2,6 +2,7 @@ package Controller;
 
 import DAO.EmployeeDAO;
 import Models.Employee;
+import Models.NotValidUsername;
 import Models.Permission;
 import Models.Role;
 import Views.AdminManageEmployeesView;
@@ -37,7 +38,7 @@ public class AdminManageEmployeesController {
     }
 
     private void searchEmployee(String searchText) {
-        ArrayList<Employee> employees = EmployeeDAO.getEmployees();
+        ArrayList<Employee> employees = EmployeeDAO.getEmployees(view.getCurrentUser());
         if (searchText.isEmpty()) {
             view.getEmployeeTable().setItems(FXCollections.observableArrayList(employees));
         } else {
@@ -49,13 +50,26 @@ public class AdminManageEmployeesController {
 
     private void addAddButtonAction()
     {
-        view.getAddButton().setOnAction(e->
-        {
-            new EmployeesDialogBox().createEmployee().showAndWait();
-            view.getEmployeeTable().setItems(FXCollections.observableArrayList(EmployeeDAO.getEmployees()));
-            view.loadData();
-            view.getEmployeeTable().refresh();
+        view.getAddButton().setOnAction(e -> {
+            Dialog<Employee> dialog = new EmployeesDialogBox().createEmployee();
+
+            dialog.showAndWait().ifPresent(employee -> {
+                try {
+                    EmployeeDAO.addEmployee(employee);
+                } catch (NotValidUsername ex) {
+                    ShowAlert.showAlert("Error", ex.getMessage());
+                    return;
+                }
+
+                view.getEmployeeTable().setItems(
+                        FXCollections.observableArrayList(
+                                EmployeeDAO.getEmployees(view.getCurrentUser())
+                        )
+                );
+                view.getEmployeeTable().refresh();
+            });
         });
+
     }
 
     private void addDeleteButtonAction()
@@ -67,8 +81,8 @@ public class AdminManageEmployeesController {
                 ShowAlert.showAlert("No Selection", "Please select an employee to delete.");
                 return;
             }
-            EmployeeDAO.deleteEmployee(selectedEmployee);
-            view.getEmployeeTable().setItems(FXCollections.observableArrayList(EmployeeDAO.getEmployees()));
+            EmployeeDAO.softDeleteEmployee(selectedEmployee);
+            view.getEmployeeTable().setItems(FXCollections.observableArrayList(EmployeeDAO.getEmployees(view.getCurrentUser())));
             view.getEmployeeTable().refresh();
         });
     }
@@ -83,6 +97,8 @@ public class AdminManageEmployeesController {
             } else {
                 //Proceed with editing the selected employee
                 EmployeesDialogBox editDialog = new EmployeesDialogBox();
+                editDialog.setEditingEmployee(selectedEmployee);
+
                 Dialog<Employee> dialog = editDialog.createEmployee();
 
                 //Pre-fill the dialog fields with the selected employees data
@@ -99,18 +115,26 @@ public class AdminManageEmployeesController {
 
                 for(int i=0; i<Permission.values().length; i++)
                 {
+                    System.out.println("Setting permission " + Permission.values()[i] + " to " + selectedEmployee.getAccessLevel().contains(Permission.values()[i]));
                     editDialog.getPermissionCheckBox().get(i).setSelected(selectedEmployee.getAccessLevel().contains(Permission.values()[i]));
                 }
-                EmployeeDAO.deleteEmployee(selectedEmployee);
-
                 //Show the dialog and wait for the result
                 dialog.showAndWait().ifPresent(updatedEmployee -> {
-                    if(updatedEmployee != null) {
+                    if (updatedEmployee != null) {
+
+                        updatedEmployee.setId(selectedEmployee.getId());
+
                         EmployeeDAO.updateEmployee(updatedEmployee);
-                        view.getEmployeeTable().setItems(FXCollections.observableArrayList(EmployeeDAO.getEmployees()));
+
+                        view.getEmployeeTable().setItems(
+                                FXCollections.observableArrayList(
+                                        EmployeeDAO.getEmployees(view.getCurrentUser())
+                                )
+                        );
                         view.getEmployeeTable().refresh();
                     }
                 });
+                editDialog.setEditingEmployee(null);
             }
         });
     }

@@ -1,7 +1,7 @@
 package Views;
 
-import DAO.EmployeeDAO;
 import DAO.BillDAO;
+import DAO.EmployeeDAO;
 import Models.*;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Insets;
@@ -17,6 +17,7 @@ import javafx.scene.text.Font;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MonitorEmployeesPerformanceView extends View{
     private final BorderPane mainLayout = new BorderPane();
@@ -119,7 +120,7 @@ public class MonitorEmployeesPerformanceView extends View{
     }
 
     public void loadData() {
-        ArrayList<Employee> employees = EmployeeDAO.getEmployeesOfSectors(((Manager)getCurrentUser()).getSectors());
+        List<Employee> employees = EmployeeDAO.getEmployeesOfSectors(((Manager)getCurrentUser()).getSectors());
         for(Sector s: ((Manager)getCurrentUser()).getSectors())
         {
             System.out.println(s);

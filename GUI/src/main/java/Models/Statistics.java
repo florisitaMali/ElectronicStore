@@ -83,7 +83,7 @@ public class Statistics {
         totalCost += EmployeeDAO.getAdministrator().getSalary();
 
         //Include the cost of employees
-        ArrayList<Employee> employees = EmployeeDAO.getEmployees();
+        ArrayList<Employee> employees = EmployeeDAO.getEmployees(new Administrator());
         for (Employee e : employees) {
             totalCost += e.getSalary();
         }

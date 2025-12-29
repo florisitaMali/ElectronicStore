@@ -40,6 +40,7 @@ public class AdminManageEmployeesView extends View{
     public TableView<Employee> getEmployeeTable() { return employeeTable;}
 
     public AdminManageEmployeesView(Employee emp) {
+        setCurrentUser(emp);
         setView();
         controller = new AdminManageEmployeesController(this);
     }
@@ -146,7 +147,7 @@ public class AdminManageEmployeesView extends View{
     }
 
     public void loadData() {
-        ArrayList<Employee> employees = EmployeeDAO.getEmployees();
+        ArrayList<Employee> employees = EmployeeDAO.getEmployees(getCurrentUser());
         employeeTable.getItems().setAll(employees);
     }
 }

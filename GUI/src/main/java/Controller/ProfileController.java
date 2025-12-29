@@ -56,7 +56,7 @@ public class ProfileController {
                             ShowAlert.showAlert("Username Changed", "Username has been changed successfully to " + newUsername);
                         } else {
                             Employee emp = EmployeeDAO.searchEmployee(profile.getCurrentUser().getUsername(), profile.getCurrentUser().getRole());
-                            EmployeeDAO.deleteEmployee(emp);
+                            EmployeeDAO.softDeleteEmployee(emp);
                             EmployeeDAO.addEmployee(emp);
                             profile.setCurrentUser(emp);
                             profile.getUsername().setText(emp.getUsername());
@@ -88,7 +88,7 @@ public class ProfileController {
                             ShowAlert.showAlert("Password Changed", "Password has been changed successfully to " + newPassword);
                         } else {
                             Employee emp = profile.getCurrentUser();
-                            EmployeeDAO.deleteEmployee(emp);
+                            EmployeeDAO.softDeleteEmployee(emp);
                             emp.setPassword(newPassword);
                             EmployeeDAO.addEmployee(emp);
                             profile.setCurrentUser(emp);
