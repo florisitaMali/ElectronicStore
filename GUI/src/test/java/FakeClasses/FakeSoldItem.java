@@ -10,10 +10,14 @@ public class FakeSoldItem extends SoldItem {
     private double sellingPrice;
 
     public FakeSoldItem(String name, int soldQty, double sellingPrice) {
-
         this.itemName = name;
         this.soldQuantity = soldQty;
         this.sellingPrice = sellingPrice;
+    }
+
+    @Override
+    public String getItemName() {
+        return itemName;
     }
 
     @Override
@@ -24,5 +28,10 @@ public class FakeSoldItem extends SoldItem {
     @Override
     public void setSoldQuantity(int sq) {
         soldQuantity = sq;
+    }
+
+    @Override
+    public double getSellingPrice() {
+        return sellingPrice;
     }
 }

@@ -2,6 +2,7 @@ package Main;
 
 import Controller.MainPageController;
 import Views.MainPageView;
+import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -21,4 +22,5 @@ public class Main extends Application {
     public static void main(String[] args) {
         Application.launch(Main.class, args);
     }
+
 }

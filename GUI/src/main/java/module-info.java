@@ -4,6 +4,7 @@ module com.example.gui {
     requires java.compiler;
     requires java.sql;
     requires javafx.graphics;
+    requires mysql.connector.j;
 
     exports com.example.gui;
     exports DAO;
