@@ -1,6 +1,8 @@
 package Models;
 
 import DAO.ItemsDAO;
+import DAO.ItemsDAOAdapter;
+import DAO.ItemsRepository;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -11,9 +13,14 @@ public class SoldItem extends Item implements Serializable {
     private static final long serialVersionUID = 0L;
 
     private int soldQuantity;
+    private static ItemsRepository itemsDAO = new ItemsDAOAdapter();
+
+    public static void setItemsDAO(ItemsRepository dao) {
+        itemsDAO = dao;
+    }
 
     public SoldItem(String n, int sq) throws ItemNotFoundException, ItemNotAvailableException {
-        Item i = ItemsDAO.searchItem(n);
+        Item i = itemsDAO.searchItem(n);
         System.out.println(i.getItemName() + "  " + i.getQuantity() + " " + sq);
 
         //Ensure that there is enough quantity available
@@ -30,6 +37,8 @@ public class SoldItem extends Item implements Serializable {
 
         soldQuantity = sq;
     }
+
+    public SoldItem(){}
 
     public SoldItem(
             String name,

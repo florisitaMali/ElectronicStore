@@ -10,7 +10,6 @@ import DAO.BillDAO;
 import DAO.ItemsDAO;
 
 public class Administrator extends Employee implements Serializable {
-
     @Serial
     private static final long serialVersionUID = 1L;
     private static ArrayList<Employee> employees;
@@ -22,7 +21,7 @@ public class Administrator extends Employee implements Serializable {
         addPermissions();;
     }
 
-    public Administrator(String name, String surname, String username, String psw, String email, String phoneNr, LocalDate dateOfBirth, double salary) throws NotValidUsername
+    public Administrator(String name, String surname, String username, String psw, String email, String phoneNr, LocalDate dateOfBirth, double salary)
     {
         super(name, surname, username, psw, email, phoneNr,dateOfBirth, salary, Role.ADMINISTRATOR);
         addPermissions();

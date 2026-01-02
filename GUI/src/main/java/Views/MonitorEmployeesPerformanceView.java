@@ -59,7 +59,7 @@ public class MonitorEmployeesPerformanceView extends View{
         TableColumn<Employee, Long> totalNrOfBillsCol = new TableColumn<>("Total Nr of Bills");
         totalNrOfBillsCol.setCellValueFactory(cellData -> {
             Employee emp = cellData.getValue();
-            long nrOfBills = Bill.getBills(emp, startDate.getValue(), endDate.getValue()).size();
+            long nrOfBills = new Bill(emp).getBills(emp, startDate.getValue(), endDate.getValue()).size();
             return new ReadOnlyObjectWrapper<>(nrOfBills);
         });
         totalNrOfBillsCol.setPrefWidth(150);
@@ -67,14 +67,14 @@ public class MonitorEmployeesPerformanceView extends View{
         TableColumn<Employee, Long> nrOfItemsSold = new TableColumn<>("NrOfItemsSold");
         nrOfItemsSold.setCellValueFactory(cellData-> {
             Employee emp = cellData.getValue();
-            long nrOfItems = getNrOfItems(Bill.getBills(emp, startDate.getValue(), endDate.getValue()));
+            long nrOfItems = getNrOfItems(new Bill().getBills(emp, startDate.getValue(), endDate.getValue()));
             return new ReadOnlyObjectWrapper<>(nrOfItems);
         });
         nrOfItemsSold.setPrefWidth(150);
 
         totalRevenue.setCellValueFactory(cellData-> {
             Employee emp = cellData.getValue();
-            double totalIncome = Statistics.getTotalIncome(startDate.getValue(), endDate.getValue(), Bill.getBills(emp, startDate.getValue(), endDate.getValue()));
+            double totalIncome = Statistics.getTotalIncome(startDate.getValue(), endDate.getValue(), new Bill().getBills(emp, startDate.getValue(), endDate.getValue()));
             return new ReadOnlyObjectWrapper<>(totalIncome);
         });
         totalRevenue.setPrefWidth(150);
@@ -82,7 +82,7 @@ public class MonitorEmployeesPerformanceView extends View{
         TableColumn<Employee, Double> totalPercentageRevenue = new TableColumn<>("Percentage of totalRevenue");
         totalPercentageRevenue.setCellValueFactory(cellData-> {
             Employee emp = cellData.getValue();
-            double persTotalRev = Statistics.getTotalIncome(startDate.getValue(), endDate.getValue(), Bill.getBills(emp, startDate.getValue(), endDate.getValue())) / Statistics.getTotalIncome(startDate.getValue(), endDate.getValue(), BillDAO.getAllBills()) * 100;
+            double persTotalRev = Statistics.getTotalIncome(startDate.getValue(), endDate.getValue(), new Bill().getBills(emp, startDate.getValue(), endDate.getValue())) / Statistics.getTotalIncome(startDate.getValue(), endDate.getValue(), BillDAO.getAllBills()) * 100;
             return new ReadOnlyObjectWrapper<>(Double.parseDouble(String.format("%.2f", persTotalRev)));
         });
         totalPercentageRevenue.setPrefWidth(200);

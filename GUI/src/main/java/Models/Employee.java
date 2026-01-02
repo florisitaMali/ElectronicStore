@@ -9,7 +9,6 @@ public abstract class Employee implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L; // Recommended for Serializable classes
 
-    // Data fields
     private int id;
     private String name;
     private String surname;
@@ -69,7 +68,6 @@ public abstract class Employee implements Serializable {
     }
 
     public ArrayList<Permission> getAccessLevel(){ return accessLevel;}
-
 
     // Setters
     public void setName(String n) {

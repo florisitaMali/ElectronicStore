@@ -1,6 +1,8 @@
 package Models;
 
 import DAO.ItemsDAO;
+import DAO.ItemsDAOAdapter;
+import DAO.ItemsRepository;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 public class Supplier implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
+    private static ItemsRepository itemsDAO;
 
     private String supplierName;
     private String address;
@@ -24,6 +27,7 @@ public class Supplier implements Serializable {
         this.products = new ArrayList<>();
         this.supplierNameProperty = new SimpleStringProperty(supplierName);
         this.addressProperty = new SimpleStringProperty(address);
+        itemsDAO = new ItemsDAOAdapter();
     }
 
     public Supplier(String supplierName) {
@@ -69,7 +73,7 @@ public class Supplier implements Serializable {
     }
 
     public ArrayList<Item> getProducts() {
-        ArrayList<Item> items = ItemsDAO.getAllItems();
+        ArrayList<Item> items = itemsDAO.getAllItems();
         ArrayList<Item> temp = new ArrayList<>();
         for (Item item : items) {
             if (item.getItemSupplier().getSupplierName().equalsIgnoreCase(getSupplierName())) {
@@ -77,6 +81,10 @@ public class Supplier implements Serializable {
             }
         }
         return temp;
+    }
+
+    public static void setItemsDAO(ItemsRepository dao) {
+        itemsDAO = dao;
     }
 
     @Override
