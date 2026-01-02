@@ -93,7 +93,7 @@ public class EmployeeDAO {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
-        String checkSql = "SELECT 1 FROM employees WHERE username = ? AND deleted = FALSE";
+        String checkSql = "SELECT 1 FROM employees WHERE username = ? AND deleted = 0";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              PreparedStatement checkPs = con.prepareStatement(checkSql)) {
@@ -131,7 +131,7 @@ public class EmployeeDAO {
             FROM employees e
             JOIN roles r ON e.role_id = r.id
             LEFT JOIN sectors s ON e.sector_id = s.id
-            WHERE e.deleted = FALSE
+            WHERE e.deleted = 0
               AND e.username <> ?
         """;
 
@@ -257,7 +257,7 @@ public class EmployeeDAO {
                 role_id = ?,
                 sector_id = ?
             WHERE id = ?
-              AND deleted = FALSE
+              AND deleted = 0
         """;
 
         try (Connection con = DBConnection.getConnection();
@@ -282,7 +282,7 @@ public class EmployeeDAO {
        SOFT DELETE
        ========================= */
     public static void softDeleteEmployee(Employee e) {
-        String sql = "UPDATE employees SET deleted = TRUE WHERE id = ?";
+        String sql = "UPDATE employees SET deleted = 1 WHERE id = ?";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, e.getId());
@@ -346,12 +346,12 @@ public class EmployeeDAO {
     }
 
     public static boolean usernameExists(String username) {
-        return existsQuery("SELECT 1 FROM employees WHERE username = ? AND deleted = FALSE", username);
+        return existsQuery("SELECT 1 FROM employees WHERE username = ? AND deleted = 0", username);
     }
 
     public static boolean usernameExistsExceptSelf(String username, int id) {
         return existsQuery(
-                "SELECT 1 FROM employees WHERE username = ? AND id <> ? AND deleted = FALSE",
+                "SELECT 1 FROM employees WHERE username = ? AND id <> ? AND deleted = 0",
                 username, id
         );
     }
@@ -480,7 +480,7 @@ public class EmployeeDAO {
             SELECT e.*, r.name AS role_name
             FROM employees e
             JOIN roles r ON e.role_id = r.id
-            WHERE r.name = 'ADMINISTRATOR' AND e.deleted = FALSE
+            WHERE r.name = 'ADMINISTRATOR' AND e.deleted = 0
             LIMIT 1
         """;
 
@@ -517,7 +517,7 @@ public class EmployeeDAO {
             FROM employees e
             JOIN roles r ON e.role_id = r.id
             LEFT JOIN sectors s ON e.sector_id = s.id
-            WHERE e.deleted = FALSE
+            WHERE e.deleted = 0
               AND e.role_id = (SELECT id FROM roles WHERE name = 'CASHIER')
               AND e.sector_id IN (
         """);
