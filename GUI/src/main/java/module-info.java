@@ -3,6 +3,7 @@ module com.example.gui {
     requires javafx.fxml;
     requires java.compiler;
     requires java.sql;
+    requires javafx.graphics;
 
     exports com.example.gui;
     exports DAO;

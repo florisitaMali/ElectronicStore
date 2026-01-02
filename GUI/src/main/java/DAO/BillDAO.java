@@ -16,12 +16,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BillDAO {
+public class BillDAO{
 
     private static final String BILL_FILES_DIR =
             "src/main/resources/com/example/gui/bills/";
 
-    /* ===================== SAVE BILL ===================== */
+    // === Dependencies that can be mocked in tests ===
+    private static EmployeeDAO employeeDAO = new EmployeeDAO();
+    private static ItemsDAO itemsDAO = new ItemsDAO();
+
+    public static void setEmployeeDAO(EmployeeDAO dao) {
+        employeeDAO = dao;
+    }
+
+    public static void setItemsDAO(ItemsDAO dao) {
+        itemsDAO = dao;
+    }
 
     public static void saveBill(Bill bill) {
         if(bill.getTotalPrice() <= 0) return;
@@ -62,7 +72,7 @@ public class BillDAO {
             try (PreparedStatement ps = con.prepareStatement(itemsSql)) {
                 for (SoldItem s : bill.getSoldItems()) {
                     ps.setInt(1, billId);
-                    ps.setInt(2, ItemsDAO.getItemId(s));
+                    ps.setInt(2, itemsDAO.getItemId(s));
                     ps.setInt(3, s.getSoldQuantity());
                     ps.setDouble(4, s.getSellingPrice());
                     ps.addBatch();
@@ -109,11 +119,10 @@ public class BillDAO {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                Employee emp =
-                        EmployeeDAO.searchEmployee(
-                                rs.getString("username"),
-                                Role.CASHIER
-                        );
+                Employee emp = employeeDAO.searchEmployee(
+                        rs.getString("username"),
+                        Role.CASHIER
+                );
 
                 Bill bill = new Bill(emp);
                 setBillData(bill, rs, con);
@@ -229,7 +238,35 @@ public class BillDAO {
     /* ===================== LEGACY METHODS ===================== */
 
     public static ArrayList<Bill> getAllBills() {
-        return new ArrayList<>();
+        ArrayList<Bill> bills = new ArrayList<>();
+
+        String sql = """
+            SELECT b.*, e.username
+            FROM bills b
+            JOIN employees e ON b.employee_id = e.id
+            ORDER BY b.sale_date
+        """;
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Employee emp = employeeDAO.searchEmployee(
+                        rs.getString("username"),
+                        Role.CASHIER
+                );
+
+                Bill bill = new Bill(emp);
+                setBillData(bill, rs, con);
+                bills.add(bill);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return bills;
     }
 
     public static LocalDateTime getLastDate() {
@@ -237,6 +274,19 @@ public class BillDAO {
     }
 
     public static long getNumberOfBills() {
+        String sql = "SELECT COUNT(*) AS total FROM bills WHERE DATE(sale_date) = CURDATE()";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getLong("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return 0;
     }
 

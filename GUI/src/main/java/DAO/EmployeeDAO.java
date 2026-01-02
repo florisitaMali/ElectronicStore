@@ -19,7 +19,7 @@ public class EmployeeDAO {
             LEFT JOIN sectors s ON e.sector_id = s.id
             WHERE e.username = ?
               AND r.name = ?
-              AND e.deleted = FALSE
+              AND e.deleted = 0
         """;
 
         try (Connection con = DBConnection.getConnection();

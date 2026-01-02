@@ -120,7 +120,7 @@ public class ItemsDAO {
 
     public static Item searchItem(String itemName) {
         String sql = """
-            SELECT i.*, c.name AS category_name, c.sector, sec.name AS sectori s.name AS supplier_name, s.address AS supplier_address
+            SELECT i.*, c.name AS category_name, c.sector, sec.name AS sectori, s.name AS supplier_name, s.address AS supplier_address
             FROM items i
             JOIN categories c ON i.category_id = c.id
             JOIN suppliers s ON i.supplier_id = s.id
