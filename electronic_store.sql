@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 28, 2025 at 11:46 PM
+-- Generation Time: Jan 02, 2026 at 02:49 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.4.8
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -40,7 +40,8 @@ CREATE TABLE `bills` (
 --
 
 INSERT INTO `bills` (`id`, `bill_number`, `sale_date`, `employee_id`, `total`) VALUES
-(1, 2, '2025-12-28 20:49:09', 2, 750);
+(1, 2, '2025-12-28 20:49:09', 2, 750),
+(3, 1, '2026-01-01 23:30:01', 2, 120);
 
 -- --------------------------------------------------------
 
@@ -60,7 +61,8 @@ CREATE TABLE `bill_items` (
 --
 
 INSERT INTO `bill_items` (`bill_id`, `item_id`, `quantity`, `price`) VALUES
-(1, 9, 1, 750);
+(1, 9, 1, 750),
+(3, 12, 1, 120);
 
 -- --------------------------------------------------------
 
@@ -102,18 +104,21 @@ CREATE TABLE `employees` (
   `birth_date` date DEFAULT NULL,
   `salary` double DEFAULT NULL,
   `role_id` int(11) NOT NULL,
-  `sector_id` int(11) DEFAULT NULL
+  `sector_id` int(11) DEFAULT NULL,
+  `deleted` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employees`
 --
 
-INSERT INTO `employees` (`id`, `first_name`, `last_name`, `username`, `password`, `email`, `phone`, `birth_date`, `salary`, `role_id`, `sector_id`) VALUES
-(2, 'Anna', 'Cashier', 'cashier1', 'cash123', 'anna@mail.com', '0692222222', '1998-03-22', 700, 2, 1),
-(3, 'Mark', 'Cashier', 'cashier2', 'cash456', 'mark@mail.com', '0693333333', '1995-11-15', 720, 2, 3),
-(5, 'Klea', 'Mani', 'man1', 'man1', 'man@empl.com', '0682356789', '1998-12-03', 800, 3, 1),
-(6, 'Mik', 'Adi', 'admin1', 'admin1', 'ad@exmpl.com', '0653214569', '1998-12-03', 1000, 1, 4);
+INSERT INTO `employees` (`id`, `first_name`, `last_name`, `username`, `password`, `email`, `phone`, `birth_date`, `salary`, `role_id`, `sector_id`, `deleted`) VALUES
+(2, 'Anna', 'Cashier', 'cashier1', 'cash123', 'anna@mail.com', '0692222222', '1998-03-22', 700, 2, 1, 0),
+(5, 'Klea', 'Mani', 'mana1', 'man1', 'man@empl.com', '0682356789', '1998-12-03', 800, 3, NULL, 0),
+(6, 'Mik', 'Adi', 'admin1', 'admin1', 'ad@exmpl.com', '0653214569', '1998-12-03', 1000, 1, 4, 0),
+(8, 'cashier2', 'cashier2', 'cash2', 'cash2', 'mail@mail.com', '0653201466', '1998-10-08', 600, 2, 4, 1),
+(9, 'manager2', 'manger2', 'man2', 'man2', 'mail@mail.com', '0652312456', '1998-10-08', 600, 3, NULL, 0),
+(11, 'cashier2', 'cash', 'cash23', 'cash23', 'mail@mail.coom', '0653514258', '1998-10-08', 1200, 2, 4, 0);
 
 -- --------------------------------------------------------
 
@@ -134,9 +139,6 @@ INSERT INTO `employee_permissions` (`employee_id`, `permission_id`) VALUES
 (2, 1),
 (2, 2),
 (2, 3),
-(3, 1),
-(3, 2),
-(3, 3),
 (5, 1),
 (5, 2),
 (5, 3),
@@ -144,7 +146,19 @@ INSERT INTO `employee_permissions` (`employee_id`, `permission_id`) VALUES
 (5, 5),
 (5, 6),
 (5, 7),
-(5, 8);
+(5, 8),
+(8, 1),
+(8, 2),
+(8, 3),
+(9, 1),
+(9, 2),
+(9, 3),
+(9, 4),
+(9, 5),
+(9, 6),
+(11, 1),
+(11, 2),
+(11, 3);
 
 -- --------------------------------------------------------
 
@@ -166,7 +180,12 @@ INSERT INTO `employee_sectors` (`employee_id`, `sector_id`) VALUES
 (5, 1),
 (5, 2),
 (5, 3),
-(5, 4);
+(5, 4),
+(5, 5),
+(5, 6),
+(9, 3),
+(9, 4),
+(9, 5);
 
 -- --------------------------------------------------------
 
@@ -193,7 +212,7 @@ CREATE TABLE `items` (
 
 INSERT INTO `items` (`id`, `name`, `quantity`, `selling_price`, `purchased_date`, `purchased_price`, `category_id`, `supplier_id`, `stock_limit`, `deleted`) VALUES
 (9, 'PlayStation 5', 10, 750, '2025-12-28', 500, 2, 3, 3, 1),
-(11, 'Sony Headsets', 10, 120, '2025-12-28', 100, 4, 1, 2, 0);
+(12, 'Sony Headsets', 9, 120, '2026-01-01', 100, 4, 1, 2, 0);
 
 -- --------------------------------------------------------
 
@@ -381,7 +400,7 @@ ALTER TABLE `suppliers`
 -- AUTO_INCREMENT for table `bills`
 --
 ALTER TABLE `bills`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -393,13 +412,13 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `employees`
 --
 ALTER TABLE `employees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `permissions`
