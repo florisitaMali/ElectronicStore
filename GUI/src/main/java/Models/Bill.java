@@ -52,14 +52,6 @@ public class Bill implements Serializable{
         updateFile(s);
         soldItems.add(s);
         totalPrice += s.getSellingPrice() * s.getSoldQuantity();
-
-        ArrayList<Item> items = ItemsDAO.getAllItems();
-
-        //To check the correctness
-        for(Item i: items)
-        {
-            System.out.println(i.getQuantity() + i.getItemName());
-        }
     }
 
     public void deleteSoldItem(SoldItem item) throws ItemNotFoundException

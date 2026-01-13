@@ -40,22 +40,17 @@ public class Statistics {
         this.totalIncome = totalIncome;
         this.totalRevenue = totalRevenue;
         this.nrOfBills = nrOfBills;
-
         // Use default adapters that wrap your static DAOs
-        this.billRepo = new BillDAOAdapter();
-        this.itemsRepo = new ItemsDAOAdapter();
-        this.employeeRepo = new EmployeeDAOAdapter();
     }
 
-    public Statistics(BillRepository billRepo,
-                      ItemsRepository itemsRepo,
-                      EmployeeRepository employeeRepo) {
-        this.billRepo = billRepo;
-        this.itemsRepo = itemsRepo;
-        this.employeeRepo = employeeRepo;
+    public Statistics(BillRepository bill,
+                      ItemsRepository items,
+                      EmployeeRepository employee) {
+        billRepo = bill;
+        itemsRepo = items;
+        employeeRepo = employee;
     }
 
-    // ===== GETTERS =====
     public LocalDate getDate() { return date; }
     public double getTotalItemCost() { return totalItemCost; }
     public double getTotalWagesCost() { return totalWagesCost; }
@@ -63,32 +58,55 @@ public class Statistics {
     public double getTotalRevenue() { return totalRevenue; }
     public int getNrOfBills() { return nrOfBills; }
 
-    // ===== STATIC PURE METHOD =====
     public static double getTotalIncome(LocalDate startDate, LocalDate endDate, ArrayList<Bill> bills) {
         double totalIncome = 0;
         for (Bill b : bills) {
+            if(b.getSaleDate().toLocalDate().isBefore(startDate) || b.getSaleDate().toLocalDate().isAfter(endDate)) {
+                continue;
+            }
             totalIncome += b.getTotalPrice();
         }
         return totalIncome;
     }
 
     public static double getTotalCostOfPurchasingItem(LocalDate startDate, LocalDate endDate) {
-        ArrayList<Bill> bills = billRepo.getAllBills(startDate, endDate);
-        System.out.println("Before calculating total cost of purchasing items, number of bills: " + bills.size());
-        double totalCost = 0;
-        for (Bill b : bills) {
-            totalCost += b.getBillsCost(b, startDate, endDate);
+        if(startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date cannot be after end date.");
         }
 
-        System.out.println("After calculating from bills, total cost: " + totalCost);
-        for (Item i : itemsRepo.getAllItems()) {
-            if (!i.getPurchasedDate().isBefore(startDate) && !i.getPurchasedDate().isAfter(endDate)) {
-                totalCost += i.getPurchasedPrice() * i.getQuantity();
-            }
-        }
+        double totalCost = getTotalCostFromBills(startDate, endDate) + getTotalCostOfItem(startDate, endDate);
+
         System.out.println("After including unsold items, total cost: " + totalCost);
         return totalCost;
     }
+
+    private static double getTotalCostFromBills(LocalDate startDate, LocalDate endDate) {
+        double totalCost = 0;
+        ArrayList<Bill> bills = billRepo.getAllBills(startDate, endDate);
+        System.out.println("Before calculating total cost of purchasing items, number of bills: " + bills.size());
+        for (Bill b : bills) {
+            double c =  b.getBillsCost(b, startDate, endDate);
+            if(c > 0){
+                totalCost += c;
+            }
+        }
+        return totalCost;
+    }
+
+    private static double getTotalCostOfItem(LocalDate startDate, LocalDate endDate) {
+        double totalCost = 0;
+        for (Item i : itemsRepo.getAllItems()) {
+            if (!i.getPurchasedDate().isBefore(startDate) && !i.getPurchasedDate().isAfter(endDate)) {
+                int q = i.getQuantity();
+                double price = i.getPurchasedPrice();
+                if (q > 0 && price > 0) {
+                    totalCost += price * q;
+                }
+            }
+        }
+        return totalCost;
+    }
+
 
     public static double getTotalCostOfSalary() {
         double totalCost = employeeRepo.getAdministrator().getSalary();

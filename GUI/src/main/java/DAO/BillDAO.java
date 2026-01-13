@@ -87,12 +87,16 @@ public class BillDAO{
         } catch (Exception e) {
             try {
                 if (con != null) con.rollback();
-            } catch (SQLException ignored) {}
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         } finally {
             try {
                 if (con != null) con.close();
-            } catch (SQLException ignored) {}
+            } catch (SQLException X) {
+                X.printStackTrace();
+            }
         }
     }
 

@@ -61,7 +61,7 @@ public class SoldItem extends Item implements Serializable {
     public void setSoldQuantity(int sq) throws ItemNotAvailableException {
         int newQuantity = getQuantity() - sq;
 
-        if (newQuantity < 0) {
+        if (newQuantity <= 1) {
             throw new ItemNotAvailableException("There is not enough stock for this item.\nThere are only " + getQuantity() + " items in stock.");
         }
         setQuantity(newQuantity);
