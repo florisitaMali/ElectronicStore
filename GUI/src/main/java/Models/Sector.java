@@ -6,5 +6,6 @@ public enum Sector {
     HOME_ENTERTAINMENT,
     AUDIO_EQUIPMENT,
     CAMERA,
-    GAMING
+    GAMING,
+    ELECTRONICS
 }

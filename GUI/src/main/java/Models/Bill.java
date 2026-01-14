@@ -49,6 +49,8 @@ public class Bill implements Serializable{
             }
         }
 
+        if(s.getSoldQuantity() <= 0)
+            return;
         updateFile(s);
         soldItems.add(s);
         totalPrice += s.getSellingPrice() * s.getSoldQuantity();
@@ -112,7 +114,8 @@ public class Bill implements Serializable{
         for(SoldItem s: items)
         {
             //Check if the items was bought between these dates
-            if((s.getPurchasedDate().isAfter(startDate) || s.getPurchasedDate().isEqual(startDate)) && (s.getPurchasedDate().isBefore(endDate) || s.getPurchasedDate().isEqual(startDate)))
+            if((s.getPurchasedDate().isAfter(startDate) || s.getPurchasedDate().isEqual(startDate)) &&
+                    (s.getPurchasedDate().isBefore(endDate) || s.getPurchasedDate().isEqual(startDate)))
                 totalCost += s.getPurchasedPrice() * s.getSoldQuantity();
         }
         return totalCost;

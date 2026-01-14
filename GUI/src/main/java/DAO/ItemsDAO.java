@@ -19,7 +19,7 @@ public class ItemsDAO {
             JOIN categories c ON i.category_id = c.id
             JOIN suppliers s ON i.supplier_id = s.id
             JOIN sectors sec ON c.sector = sec.id
-            WHERE i.deleted = FALSE
+            WHERE i.deleted = 0
         """;
 
         try (Connection con = DBConnection.getConnection();
@@ -144,7 +144,7 @@ public class ItemsDAO {
                             rs.getString("supplier_address")
                     );
 
-                    return new Item(
+                    Item item = new Item(
                             rs.getString("name"),
                             rs.getInt("quantity"),
                             category,
@@ -153,6 +153,8 @@ public class ItemsDAO {
                             rs.getDouble("selling_price"),
                             rs.getLong("stock_limit")
                     );
+                    item.setId(rs.getInt("id")); // <-- ADD THIS
+                    return item;
                 }
             }
 
@@ -175,7 +177,7 @@ public class ItemsDAO {
             FROM bill_items bi
             JOIN items i ON bi.item_id = i.id
             JOIN bills b ON bi.bill_id = b.id
-            WHERE b.date BETWEEN ? AND ?
+            WHERE b.sale_date BETWEEN ? AND ?
             GROUP BY i.name
         """;
 

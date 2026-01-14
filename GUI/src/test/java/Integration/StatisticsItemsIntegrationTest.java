@@ -16,7 +16,6 @@ public class StatisticsItemsIntegrationTest {
     void getTotalCostOfPurchasingItem_IncludesUnsoldItems() {
         Statistics.setBillRepository(new FakeBillDAO());
         Statistics.setItemsRepository(new FakeItemsDAO());
-        Statistics.setEmployeeRepository(new FakeEmployeeDAO());
 
         double cost = Statistics.getTotalCostOfPurchasingItem(
                 LocalDate.of(2025, 1, 1),

@@ -59,6 +59,9 @@ public class Statistics {
     public int getNrOfBills() { return nrOfBills; }
 
     public static double getTotalIncome(LocalDate startDate, LocalDate endDate, ArrayList<Bill> bills) {
+        if(bills == null || bills.isEmpty() || startDate == null || endDate == null) return 0;
+        if(startDate.isAfter(endDate)) throw new IllegalArgumentException("Start date cannot be after end date.");
+
         double totalIncome = 0;
         for (Bill b : bills) {
             if(b.getSaleDate().toLocalDate().isBefore(startDate) || b.getSaleDate().toLocalDate().isAfter(endDate)) {
