@@ -1,41 +1,92 @@
 package Integration;
 
+import Models.*;
+import DAO.*;
+
 import FakeClasses.FakeBillDAO;
 import FakeClasses.FakeItemsDAO;
 import FakeClasses.FakeEmployeeDAO;
-import Models.Employee;
-import Models.Statistics;
-import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StatisticsFullIntegrationTest {
 
-    @Test
-    void statistics_FullyIntegratedWithAllRepositories() {
+    private static BillRepository billRepo;
+    private static ItemsRepository itemsRepo;
+    private static EmployeeRepository employeeRepo;
 
-        // Bottom-Up: inject already integrated repositories
-        FakeBillDAO billRepo = new FakeBillDAO();
-        FakeItemsDAO itemsRepo = new FakeItemsDAO();
-        FakeEmployeeDAO employeeRepo = new FakeEmployeeDAO();
+    private static LocalDate startDate;
+    private static LocalDate endDate;
 
+    @BeforeAll
+    public static void setupIntegration() {
+
+        // Bottom-Up: concrete implementations of repository interfaces
+        billRepo = new FakeBillDAO();
+        itemsRepo = new FakeItemsDAO();
+        employeeRepo = new FakeEmployeeDAO();
+
+        // Inject repositories into Statistics
         Statistics.setBillRepository(billRepo);
         Statistics.setItemsRepository(itemsRepo);
         Statistics.setEmployeeRepository(employeeRepo);
 
-        LocalDate start = LocalDate.of(2025, 1, 1);
-        LocalDate end = LocalDate.of(2025, 12, 31);
+        startDate = LocalDate.of(2025, 1, 1);
+        endDate   = LocalDate.of(2025, 12, 31);
+    }
 
-        // Act: Statistics uses integrated repositories
-        double purchasingCost =
-                Statistics.getTotalCostOfPurchasingItem(start, end);
+    // getTotalIncome
+    @Test
+    @Order(1)
+    public void testGetTotalIncomeWithinDateRange() {
 
-        double salaryCost =
-                Statistics.getTotalCostOfSalary();
+        ArrayList<Bill> bills = billRepo.getAllBills(startDate, endDate);
 
-        // Expected salary (from integrated fake behavior)
+        double income = Statistics.getTotalIncome(startDate, endDate, bills);
+
+        assertTrue(income > 0);
+    }
+
+    @Test
+    @Order(2)
+    public void testGetTotalIncomeWithEmptyBills() {
+
+        double income = Statistics.getTotalIncome(startDate, endDate, new ArrayList<>());
+
+        assertEquals(0, income);
+    }
+
+    // getTotalCostOfPurchasingItem
+    @Test
+    @Order(3)
+    public void testGetTotalCostOfPurchasingItem() {
+
+        double cost = Statistics.getTotalCostOfPurchasingItem(startDate, endDate);
+
+        assertTrue(cost > 0);
+    }
+
+    @Test
+    @Order(4)
+    public void testGetTotalCostOfPurchasingItemInvalidDates() {
+
+        assertThrows(IllegalArgumentException.class, () ->
+                Statistics.getTotalCostOfPurchasingItem(endDate, startDate));
+    }
+
+    // getTotalCostOfSalary
+    @Test
+    @Order(5)
+    public void testGetTotalCostOfSalary() {
+
+        double calculatedSalary = Statistics.getTotalCostOfSalary();
+
         double expectedSalary =
                 employeeRepo.getAdministrator().getSalary()
                         + employeeRepo.getEmployees()
@@ -43,8 +94,22 @@ public class StatisticsFullIntegrationTest {
                         .mapToDouble(Employee::getSalary)
                         .sum();
 
-        // Assert: full integration
-        assertTrue(purchasingCost > 0);
-        assertEquals(expectedSalary, salaryCost);
+        assertEquals(expectedSalary, calculatedSalary);
+    }
+
+    // Statistics constructor integration
+    @Test
+    @Order(6)
+    public void testStatisticsConstructorWithRepositories() {
+
+        Statistics statistics = new Statistics(
+                billRepo,
+                itemsRepo,
+                employeeRepo
+        );
+
+        double salaryCost = Statistics.getTotalCostOfSalary();
+
+        assertTrue(salaryCost > 0);
     }
 }
