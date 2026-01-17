@@ -39,6 +39,9 @@ public class AdminManageEmployeesView extends View{
     public TextField getSearchField() { return searchField;}
     public TableView<Employee> getEmployeeTable() { return employeeTable;}
 
+    public AdminManageEmployeesView(){
+        controller = new AdminManageEmployeesController(this);
+    }
     public AdminManageEmployeesView(Employee emp) {
         setCurrentUser(emp);
         setView();

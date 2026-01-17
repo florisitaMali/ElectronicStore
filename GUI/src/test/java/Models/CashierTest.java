@@ -8,9 +8,6 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * JUnit tests for Cashier class using FakeCashier
- */
 class CashierTest {
 
     private FakeCashier cashier;

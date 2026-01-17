@@ -16,6 +16,21 @@ import java.util.ArrayList;
 
 public class AdminManageEmployeesController {
     AdminManageEmployeesView view;
+    private EmployeesDialogBox dialogBox = new EmployeesDialogBox();
+    private Dialog<Employee> employeeDialog = dialogBox.createEmployee();
+
+    public Dialog<Employee> getEmployeeDialog() {
+        return employeeDialog;
+    }
+
+    public EmployeesDialogBox getDialogBox() {
+        return dialogBox;
+    }
+    
+    public Dialog<Employee> createAddEmployeeDialogForTest() {
+        employeeDialog = dialogBox.createEmployee();
+        return employeeDialog;
+    }
 
     public AdminManageEmployeesController(AdminManageEmployeesView view)
     {
@@ -51,9 +66,9 @@ public class AdminManageEmployeesController {
     private void addAddButtonAction()
     {
         view.getAddButton().setOnAction(e -> {
-            Dialog<Employee> dialog = new EmployeesDialogBox().createEmployee();
+            employeeDialog = dialogBox.createEmployee();
 
-            dialog.showAndWait().ifPresent(employee -> {
+            employeeDialog.showAndWait().ifPresent(employee -> {
                 try {
                     EmployeeDAO.addEmployee(employee);
                 } catch (NotValidUsername ex) {
@@ -67,6 +82,8 @@ public class AdminManageEmployeesController {
                         )
                 );
                 view.getEmployeeTable().refresh();
+
+                dialogBox.clearFields();
             });
         });
 
@@ -96,10 +113,10 @@ public class AdminManageEmployeesController {
                 ShowAlert.showAlert("No Selection", "Please select an employee to edit.");
             } else {
                 //Proceed with editing the selected employee
-                EmployeesDialogBox editDialog = new EmployeesDialogBox();
+                EmployeesDialogBox editDialog = dialogBox;
                 editDialog.setEditingEmployee(selectedEmployee);
 
-                Dialog<Employee> dialog = editDialog.createEmployee();
+                employeeDialog = editDialog.createEmployee();
 
                 //Pre-fill the dialog fields with the selected employees data
                 editDialog.getNameField().setText(selectedEmployee.getName());
@@ -119,7 +136,7 @@ public class AdminManageEmployeesController {
                     editDialog.getPermissionCheckBox().get(i).setSelected(selectedEmployee.getAccessLevel().contains(Permission.values()[i]));
                 }
                 //Show the dialog and wait for the result
-                dialog.showAndWait().ifPresent(updatedEmployee -> {
+                employeeDialog.showAndWait().ifPresent(updatedEmployee -> {
                     if (updatedEmployee != null) {
 
                         updatedEmployee.setId(selectedEmployee.getId());
@@ -135,7 +152,9 @@ public class AdminManageEmployeesController {
                     }
                 });
                 editDialog.setEditingEmployee(null);
+                dialogBox.clearFields();
             }
         });
     }
+
 }

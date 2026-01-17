@@ -65,6 +65,17 @@ public class EmployeesDialogBox {
     public CashierSectorSelection getCashierSectorSelection() { return cashierSectorSelection; }
     public ManagerSectorSelection getManagerSectorSelection() { return managerSectorSelection; }
 
+    private Sector testSelectedSector; // For tests
+    private ArrayList<Sector> testSelectedSectors; // For manager
+
+    public void setTestSelectedSector(Sector sector) {
+        this.testSelectedSector = sector;
+    }
+
+    public void setTestSelectedSectors(ArrayList<Sector> sectors) {
+        this.testSelectedSectors = sectors;
+    }
+
     private Employee editingEmployee = null;
 
     public void setEditingEmployee(Employee employee) {
@@ -90,6 +101,23 @@ public class EmployeesDialogBox {
         emailField.setPromptText("Email");
         salaryField.setPromptText("Salary");
 
+        nameField.setId("nameField");
+        surnameField.setId("surnameField");
+        usernameField.setId("usernameField");
+        passwordField.setId("passwordField");
+        birthdayField.setId("birthdayField");
+        phoneField.setId("phoneField");
+        emailField.setId("emailField");
+        salaryField.setId("salaryField");
+
+        cashierRadioButton.setId("Cashier");
+        managerRadioButton.setId("Manager");
+
+
+        for (int i = 0; i < permissionCheckBox.size(); i++) {
+            permissionCheckBox.get(i).setId(Permission.values()[i].name());
+        }
+
         ToggleGroup toggleGroup = new ToggleGroup();
         cashierRadioButton.setToggleGroup(toggleGroup);
         managerRadioButton.setToggleGroup(toggleGroup);
@@ -98,6 +126,7 @@ public class EmployeesDialogBox {
         hbox.getChildren().addAll(cashierRadioButton, managerRadioButton);
 
         VBox vbox = new VBox(5);
+        permissionCheckBox.clear();
         for (Permission p : Permission.values()) {
             permissionCheckBox.add(new CheckBox(p.toString()));
         }
@@ -129,76 +158,111 @@ public class EmployeesDialogBox {
         employeeDialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButton) {
                 try {
-                    String name = nameField.getText();
-                    String surname = surnameField.getText();
-                    String username = usernameField.getText();
-                    String password = passwordField.getText();
-                    String email = emailField.getText();
-                    String phoneNr = phoneField.getText();
+                    String name = nameField.getText().trim();
+                    String surname = surnameField.getText().trim();
+                    String username = usernameField.getText().trim();
+                    String password = passwordField.getText().trim();
+                    String email = emailField.getText().trim();
+                    String phoneNr = phoneField.getText().trim();
+                    String salaryText = salaryField.getText().trim();
                     LocalDate dateOfBirth = birthdayField.getValue();
-                    double salary = Double.parseDouble(salaryField.getText());
 
+                    // ======== VALIDATION ========
+                    if (name.isEmpty() || surname.isEmpty() || username.isEmpty() || password.isEmpty()
+                            || email.isEmpty() || phoneNr.isEmpty() || salaryText.isEmpty() || dateOfBirth == null
+                            || (!cashierRadioButton.isSelected() && !managerRadioButton.isSelected())) {
+                        ShowAlert.showAlert("Invalid Data", "Please fill in all required fields and select a role.");
+                        return null;
+                    }
+
+                    double salary;
+                    try {
+                        salary = Double.parseDouble(salaryText);
+                        if (salary < 0) {
+                            ShowAlert.showAlert("Invalid Data", "Salary must be a positive number.");
+                            return null;
+                        }
+                    } catch (NumberFormatException ex) {
+                        ShowAlert.showAlert("Invalid Data", "Salary must be a valid number.");
+                        return null;
+                    }
+
+                    // ======== CREATE EMPLOYEE ========
                     if (cashierRadioButton.isSelected()) {
-                        Sector sector = cashierSectorSelection
-                                .createSectorDialog("Cashier Sector")
+                        Sector sector = (testSelectedSector != null)
+                                ? testSelectedSector
+                                : cashierSectorSelection.createSectorDialog("Cashier Sector")
                                 .showAndWait()
                                 .orElse(null);
 
-                        if (sector == null) return null;
-
-                        Cashier cashier = new Cashier(
-                                name, surname, username, password,
-                                email, phoneNr, dateOfBirth, salary, sector
-                        );
-
-                        if (editingEmployee != null) {
-                            cashier.setId(editingEmployee.getId()); // VERY IMPORTANT
+                        if (sector == null) {
+                            ShowAlert.showAlert("Invalid Data", "Please select a sector for the cashier.");
+                            return null;
                         }
 
+                        Cashier cashier = new Cashier(name, surname, username, password,
+                                email, phoneNr, dateOfBirth, salary, sector);
+                        if (editingEmployee != null) cashier.setId(editingEmployee.getId());
+
                         for (int i = 0; i < permissionCheckBox.size(); i++) {
-                            if (permissionCheckBox.get(i).isSelected()) {
-                                cashier.addPermission(Permission.values()[i]);
-                            }
+                            if (permissionCheckBox.get(i).isSelected()) cashier.addPermission(Permission.values()[i]);
                         }
                         return cashier;
                     }
 
                     if (managerRadioButton.isSelected()) {
-                        ArrayList<Sector> sectors = managerSectorSelection
-                                .createSectorDialog("Manager Sectors")
+                        ArrayList<Sector> sectors = (testSelectedSectors != null)
+                                ? testSelectedSectors
+                                : managerSectorSelection.createSectorDialog("Manager Sectors")
                                 .showAndWait()
                                 .orElse(null);
 
-                        if (sectors == null) return null;
-
-                        Manager manager = new Manager(
-                                name, surname, username, password,
-                                email, phoneNr, dateOfBirth, salary
-                        );
-
-                        if (editingEmployee != null) {
-                            manager.setId(editingEmployee.getId());
+                        if (sectors == null || sectors.isEmpty()) {
+                            ShowAlert.showAlert("Invalid Data", "Please select at least one sector for the manager.");
+                            return null;
                         }
 
+                        Manager manager = new Manager(name, surname, username, password,
+                                email, phoneNr, dateOfBirth, salary);
+                        if (editingEmployee != null) manager.setId(editingEmployee.getId());
                         sectors.forEach(manager::addSector);
 
                         for (int i = 0; i < permissionCheckBox.size(); i++) {
-                            if (permissionCheckBox.get(i).isSelected()) {
-                                manager.addPermission(Permission.values()[i]);
-                            }
+                            if (permissionCheckBox.get(i).isSelected()) manager.addPermission(Permission.values()[i]);
                         }
                         return manager;
                     }
 
                 } catch (Exception ex) {
                     ShowAlert.showAlert("Invalid Data", ex.getMessage());
+                    return null;
                 }
             }
             return null;
         });
 
-
-
         return employeeDialog;
     }
+
+    public void clearFields() {
+        nameField.clear();
+        surnameField.clear();
+        usernameField.clear();
+        passwordField.clear();
+        emailField.clear();
+        phoneField.clear();
+        salaryField.clear();
+        birthdayField.setValue(LocalDate.of(1998, 10, 8)); // default birthday
+        cashierRadioButton.setSelected(false);
+        managerRadioButton.setSelected(false);
+
+        for (CheckBox cb : permissionCheckBox) {
+            cb.setSelected(false);
+        }
+
+        // Clear test sectors for testing purposes
+        testSelectedSector = null;
+        if (testSelectedSectors != null) testSelectedSectors.clear();
+    }
+
 }

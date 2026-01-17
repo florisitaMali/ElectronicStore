@@ -235,9 +235,6 @@ public class EmployeeDAO {
         }
     }
 
-    /* =========================
-       UPDATE EMPLOYEE
-       ========================= */
     public static void updateEmployee(Employee e) {
 
         if (usernameExistsExceptSelf(e.getUsername(), e.getId())) {
