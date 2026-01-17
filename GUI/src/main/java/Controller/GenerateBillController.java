@@ -29,6 +29,10 @@ public class GenerateBillController {
         enableButtons();
     }
 
+    public PrintPane getPrintPane() {
+        return printPane;
+    }
+
     private void enableButtons() {
         setDeleteButtonAction();
         setAddButtonAction();

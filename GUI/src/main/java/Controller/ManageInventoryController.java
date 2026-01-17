@@ -60,12 +60,17 @@ public class ManageInventoryController {
     private void addItem() {
         Dialog<Item> dialog = ItemDialogBox.createItemDialog("Add New Item", view.getCurrentUser());
         dialog.showAndWait().ifPresent(item -> {
+            if (item.getQuantity() < 0 || item.getPurchasedPrice() < 0 || item.getSellingPrice() < 0 || item.getStockLimit() < 0) {
+                ShowAlert.showAlert("Invalid Input", "Numeric values cannot be negative.");
+                return;
+            }
             view.getItemList().add(item);
             ItemsDAO.addItem(item);
             view.getInventoryTable().getItems().add(item);
             view.getInventoryTable().refresh();
         });
     }
+
 
     private void editItem() {
         System.out.println("Edit button clicked");

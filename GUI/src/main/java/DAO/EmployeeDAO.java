@@ -343,12 +343,12 @@ public class EmployeeDAO {
     }
 
     public static boolean usernameExists(String username) {
-        return existsQuery("SELECT 1 FROM employees WHERE username = ? AND deleted = 0", username);
+        return existsQuery("SELECT 1 FROM employees WHERE username = ?", username);
     }
 
     public static boolean usernameExistsExceptSelf(String username, int id) {
         return existsQuery(
-                "SELECT 1 FROM employees WHERE username = ? AND id <> ? AND deleted = 0",
+                "SELECT 1 FROM employees WHERE username = ? AND id <> ?",
                 username, id
         );
     }
@@ -368,9 +368,6 @@ public class EmployeeDAO {
         return false;
     }
 
-    /* =========================
-       LOOKUPS (UNCHANGED)
-       ========================= */
     private static int getRoleId(Role role) throws SQLException {
         return lookupId("SELECT id FROM roles WHERE name = ?", role.name());
     }

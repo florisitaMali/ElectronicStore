@@ -22,6 +22,10 @@ public class Item implements Serializable {
     public Item(){}
 
     public Item(String n, int q, Category c, Supplier s, double pp, double sp, long stockLimit) throws ItemNotAvailableException{
+        if (quantity < 0) throw new IllegalArgumentException("Quantity cannot be negative");
+        if (purchasedPrice < 0) throw new IllegalArgumentException("Purchased price cannot be negative");
+        if (sellingPrice < 0) throw new IllegalArgumentException("Selling price cannot be negative");
+        if (stockLimit < 0) throw new IllegalArgumentException("Stock limit cannot be negative");
         this.itemName = n;
         setQuantity(q);
         this.category = c;

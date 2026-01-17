@@ -30,7 +30,7 @@ public class LoginView {
     private final Button backBtn = new Button("Back");
     private final TextField userNameTextField = new TextField();
     private final PasswordField passwordField = new PasswordField();
-    private final Role role;
+    private Role role;
 
     public LoginView(Role role) {
         this.role = role;
@@ -54,6 +54,11 @@ public class LoginView {
     public Button getBackBtn()
     {
         return backBtn;
+    }
+
+    public void setRole(Role role) {
+        // This method can be used to change the role if needed
+        this.role = role;
     }
 
     public TextField getUserNameTextField() {

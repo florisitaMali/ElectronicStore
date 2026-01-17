@@ -153,7 +153,7 @@ public class ItemsDAO {
                             rs.getDouble("selling_price"),
                             rs.getLong("stock_limit")
                     );
-                    item.setId(rs.getInt("id")); // <-- ADD THIS
+                    item.setId(rs.getInt("id"));
                     return item;
                 }
             }

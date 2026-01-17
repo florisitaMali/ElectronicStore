@@ -121,13 +121,14 @@ class AdminManageEmployeesControllerIT {
         });
 
         writeEmployeeData(robot,
-                "Test5", "Manager", "test_user_139",
+                "Test5", "Manager", "test_user_159",
                 "pass", "test@mail.com", "123456",
                 "3000", Role.MANAGER
         );
 
         robot.clickOn("Save");
 
+        view.getEmployeeTable().refresh();
         int after = view.getEmployeeTable().getItems().size();
 
         assertEquals(before + 1, after);
@@ -147,7 +148,7 @@ class AdminManageEmployeesControllerIT {
         });
 
         writeEmployeeData(robot,
-                "Test1", "Employee1", "test_user_126",
+                "Test1", "Employee1", "test_user_130",
                 "pass", "test@mail.com", "123456",
                 "3000", Role.CASHIER
         );
@@ -166,11 +167,10 @@ class AdminManageEmployeesControllerIT {
         });
 
         writeEmployeeData(robot,
-                "TestDup", "EmployeeDup", "test_user_126", // duplicate username
+                "TestDup", "EmployeeDup", "test_user_130", // duplicate username
                 "pass", "dup@mail.com", "654321",
                 "3500", Role.CASHIER
         );
-        robot.clickOn("Cashier");
         robot.clickOn("Save");
 
         int afterDuplicate = table.getItems().size();

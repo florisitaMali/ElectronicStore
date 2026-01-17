@@ -78,9 +78,8 @@ public class Bill implements Serializable{
     private void updateFile(SoldItem s) throws ItemNotAvailableException
     {
         Item i = ItemsDAO.searchItem(s.getItemName());
-        ItemsDAO.deleteItem(i);
         i.setQuantity(i.getQuantity() - s.getSoldQuantity());
-        ItemsDAO.addItem(i);
+        ItemsDAO.updateItem(i);
     }
 
     public String printBill() {

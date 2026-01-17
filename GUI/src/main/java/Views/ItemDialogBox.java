@@ -84,43 +84,96 @@ public class ItemDialogBox {
         grid.add(new Label("Stock Limit:"), 0, 6);
         grid.add(stockLimitField, 1, 6);
 
+        itemNameField.setId("itemNameField");
+        quantityField.setId("quantityField");
+        for(var node : categoryBox.getChildren()) {
+            if (node instanceof RadioButton rb) {
+                rb.setId("categoryRadioButton_" + rb.getUserData().toString());
+            }
+        }
+
+        supplierComboBox.setId("supplierComboBox");
+        purchasedPriceField.setId("purchasedPriceField");
+        sellingPriceField.setId("sellingPriceField");
+        stockLimitField.setId("stockLimitField");
+
         dialog.getDialogPane().setContent(grid);
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
-                try {
-                    RadioButton selectedRadioButton = (RadioButton) categoryToggleGroup.getSelectedToggle();
-                    if (selectedRadioButton == null || itemNameField == null || quantityField == null || purchasedPriceField == null ||
-                        sellingPriceField == null || stockLimitField == null) {
-                        ShowAlert.showAlert("Invalid Input", "Please enter all datas.");
-                        return null;
-                    }
-
-                    Category selectedCategory = (Category) selectedRadioButton.getUserData();
-
-                    Supplier supplier = supplierComboBox.getValue();
-                    if (supplier == null) {
-                        ShowAlert.showAlert("Invalid Input", "Please select a supplier.");
-                        return null;
-                    }
-
-                    return new Item(
-                            itemNameField.getText(),
-                            Integer.parseInt(quantityField.getText()),
-                            selectedCategory,
-                            supplier,
-                            Double.parseDouble(purchasedPriceField.getText()),
-                            Double.parseDouble(sellingPriceField.getText()),
-                            Long.parseLong(stockLimitField.getText())
-                    );
-                } catch (NumberFormatException e) {
-                    ShowAlert.showAlert("Invalid Input", "Please enter valid numbers.");
+                String name = itemNameField.getText().trim();
+                if (name.isEmpty() || name.isBlank() || name.length() == 0) {
+                    ShowAlert.showAlert("Invalid Input", "Item name cannot be empty.");
                     return null;
                 }
+
+                int quantity;
+                try {
+                    quantity = Integer.parseInt(quantityField.getText().trim());
+                    if (quantity < 0) {
+                        ShowAlert.showAlert("Invalid Input", "Quantity cannot be negative.");
+                        return null;
+                    }
+                } catch (NumberFormatException e) {
+                    ShowAlert.showAlert("Invalid Input", "Quantity must be a valid number.");
+                    return null;
+                }
+
+                RadioButton selectedRadioButton = (RadioButton) categoryToggleGroup.getSelectedToggle();
+                if (selectedRadioButton == null) {
+                    ShowAlert.showAlert("Invalid Input", "Please select a category.");
+                    return null;
+                }
+                Category selectedCategory = (Category) selectedRadioButton.getUserData();
+
+                Supplier supplier = supplierComboBox.getValue();
+                if (supplier == null) {
+                    ShowAlert.showAlert("Invalid Input", "Please select a supplier.");
+                    return null;
+                }
+
+                double purchasedPrice;
+                try {
+                    purchasedPrice = Double.parseDouble(purchasedPriceField.getText().trim());
+                    if (purchasedPrice < 0) {
+                        ShowAlert.showAlert("Invalid Input", "Purchased price cannot be negative.");
+                        return null;
+                    }
+                } catch (NumberFormatException e) {
+                    ShowAlert.showAlert("Invalid Input", "Purchased price must be a valid number.");
+                    return null;
+                }
+
+                double sellingPrice;
+                try {
+                    sellingPrice = Double.parseDouble(sellingPriceField.getText().trim());
+                    if (sellingPrice < 0) {
+                        ShowAlert.showAlert("Invalid Input", "Selling price cannot be negative.");
+                        return null;
+                    }
+                } catch (NumberFormatException e) {
+                    ShowAlert.showAlert("Invalid Input", "Selling price must be a valid number.");
+                    return null;
+                }
+
+                long stockLimit;
+                try {
+                    stockLimit = Long.parseLong(stockLimitField.getText().trim());
+                    if (stockLimit < 0) {
+                        ShowAlert.showAlert("Invalid Input", "Stock limit cannot be negative.");
+                        return null;
+                    }
+                } catch (NumberFormatException e) {
+                    ShowAlert.showAlert("Invalid Input", "Stock limit must be a valid number.");
+                    return null;
+                }
+
+                return new Item(name, quantity, selectedCategory, supplier, purchasedPrice, sellingPrice, stockLimit);
             }
             return null;
         });
 
         return dialog;
     }
+
 }

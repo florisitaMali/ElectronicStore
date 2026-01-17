@@ -90,7 +90,7 @@ public class ManagerSectorsView extends View {
 
     public ManagerSectorsView(Employee emp)
     {
-        sectors = FXCollections.observableArrayList(((Manager) getCurrentUser()).getSectors());
+        sectors = FXCollections.observableArrayList(((Manager) emp).getSectors());
         System.out.println(sectors);
         sectorComboBox = new ComboBox<>(sectors);
         controller = new ManagerSectorsController(this);

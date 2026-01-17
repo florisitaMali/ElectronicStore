@@ -22,15 +22,15 @@ import javafx.scene.text.FontWeight;
 public class GenerateBillView extends View {
     private GenerateBillController controller;
 
-    private static BorderPane primaryPane = new BorderPane();
-    private static Button addSoldItemBtn = new Button("ADD");
-    private static Button deleteSoldItemBtn = new Button("DELETE");
-    private static Button printBillBtn = new Button("PRINT");
+    private  BorderPane primaryPane = new BorderPane();
+    private  Button addSoldItemBtn = new Button("ADD");
+    private  Button deleteSoldItemBtn = new Button("DELETE");
+    private  Button printBillBtn = new Button("PRINT");
     private final TableView<SoldItem> billTable = new TableView<>();
-    private static TableColumn<SoldItem, String> nameColumn = new TableColumn<>("Item Name");
-    private static TableColumn<SoldItem, Integer> quantityColumn = new TableColumn<>("Quantity");
-    private static TableColumn<SoldItem, Double> priceColumn = new TableColumn<>("Price");
-    private static TableColumn<SoldItem, Double> totalPriceColumn = new TableColumn<>("Total Price");
+    private  TableColumn<SoldItem, String> nameColumn = new TableColumn<>("Item Name");
+    private  TableColumn<SoldItem, Integer> quantityColumn = new TableColumn<>("Quantity");
+    private  TableColumn<SoldItem, Double> priceColumn = new TableColumn<>("Price");
+    private  TableColumn<SoldItem, Double> totalPriceColumn = new TableColumn<>("Total Price");
     private ObservableList<SoldItem> soldItems;
     private static TextField totalAmount = new TextField();
     private DeleteItemView deleteItemView;
@@ -48,7 +48,6 @@ public class GenerateBillView extends View {
         deleteItemView = new DeleteItemView();
         createNewBill();
         setupView();
-        controller = new GenerateBillController(this);
     }
 
     // Getters
@@ -69,7 +68,7 @@ public class GenerateBillView extends View {
     public ObservableList<Item> getItems() { return items; }
     public ListView<Item> getItemList() { return itemList; }
     public Bill getBill() { return bill; }
-
+    public PrintPane pane = new PrintPane();
     @Override
     public Parent getView() {
         return primaryPane;

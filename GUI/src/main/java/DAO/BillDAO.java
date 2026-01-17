@@ -50,7 +50,7 @@ public class BillDAO{
             try (PreparedStatement ps =
                          con.prepareStatement(billSql, Statement.RETURN_GENERATED_KEYS)) {
 
-                ps.setLong(1, bill.getBillNumber());
+                ps.setLong(1, Integer.valueOf(String.valueOf(getAllBills(LocalDate.now(), LocalDate.now()).size()) + String.valueOf(LocalDate.now().getYear()) + String.valueOf(LocalDate.now().getMonthValue()) + String.valueOf(LocalDate.now().getDayOfMonth())));
                 ps.setTimestamp(2, Timestamp.valueOf(bill.getSaleDate()));
                 ps.setInt(3, getEmployeeId(con, bill.getEmployee()));
                 ps.setDouble(4, bill.getTotalPrice());
