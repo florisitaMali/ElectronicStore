@@ -33,7 +33,9 @@ public class ReadBillTableView {
             tableBillList = FXCollections.observableArrayList(BillDAO.getAllBills());
         else
             tableBillList = FXCollections.observableArrayList(BillDAO.getDayBills(readBillsView.getCurrentUser()));
-
+        System.out.println("Bills in Table:");
+        for(Bill b : tableBillList)
+            System.out.println("Bill Num: " + b.getBillNumber() + " Date: " + b.getSaleDate() + " Total Price: " + b.getTotalPrice());
         billTable.setItems(tableBillList);
         setUpColumns();
     }

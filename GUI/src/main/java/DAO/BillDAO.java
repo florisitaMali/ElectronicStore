@@ -34,45 +34,49 @@ public class BillDAO{
     }
 
     public static void saveBill(Bill bill) {
-        if(bill.getTotalPrice() <= 0) return;
-        Connection con = null;
+        if (bill.getTotalPrice() <= 0) return;
 
-        try {
-            con = DBConnection.getConnection();
+        try (Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
 
             String billSql = """
-                INSERT INTO bills (bill_number, sale_date, employee_id, total)
-                VALUES (?, ?, ?, ?)
-            """;
+            INSERT INTO bills (bill_number, sale_date, employee_id, total)
+            VALUES (?, ?, ?, ?)
+        """;
 
             int billId;
-            try (PreparedStatement ps =
-                         con.prepareStatement(billSql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps = con.prepareStatement(billSql, Statement.RETURN_GENERATED_KEYS)) {
+                // Safe bill_number generation
+                long billNumber = System.currentTimeMillis();
+                ps.setLong(1, billNumber);
 
-                ps.setLong(1, Integer.valueOf(String.valueOf(getAllBills(LocalDate.now(), LocalDate.now()).size()) + String.valueOf(LocalDate.now().getYear()) + String.valueOf(LocalDate.now().getMonthValue()) + String.valueOf(LocalDate.now().getDayOfMonth())));
                 ps.setTimestamp(2, Timestamp.valueOf(bill.getSaleDate()));
-                ps.setInt(3, getEmployeeId(con, bill.getEmployee()));
-                ps.setDouble(4, bill.getTotalPrice());
 
+                int empId = getEmployeeId(con, bill.getEmployee());
+                if (empId == 0) throw new SQLException("Employee not found in DB");
+                ps.setInt(3, empId);
+
+                ps.setDouble(4, bill.getTotalPrice());
                 ps.executeUpdate();
 
-                ResultSet keys = ps.getGeneratedKeys();
-                if (!keys.next()) {
-                    throw new SQLException("Failed to create bill");
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (!keys.next()) throw new SQLException("Failed to create bill");
+                    billId = keys.getInt(1);
                 }
-                billId = keys.getInt(1);
             }
 
             String itemsSql = """
-                INSERT INTO bill_items (bill_id, item_id, quantity, price)
-                VALUES (?, ?, ?, ?)
-            """;
+            INSERT INTO bill_items (bill_id, item_id, quantity, price)
+            VALUES (?, ?, ?, ?)
+        """;
 
             try (PreparedStatement ps = con.prepareStatement(itemsSql)) {
                 for (SoldItem s : bill.getSoldItems()) {
+                    int itemId = ItemsDAO.getItemId(s);
+                    if (itemId == 0) throw new SQLException("Item not found in DB: " + s.getItemName());
+
                     ps.setInt(1, billId);
-                    ps.setInt(2, itemsDAO.getItemId(s));
+                    ps.setInt(2, itemId);
                     ps.setInt(3, s.getSoldQuantity());
                     ps.setDouble(4, s.getSellingPrice());
                     ps.addBatch();
@@ -85,18 +89,7 @@ public class BillDAO{
             createBillFile(bill);
 
         } catch (Exception e) {
-            try {
-                if (con != null) con.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
             e.printStackTrace();
-        } finally {
-            try {
-                if (con != null) con.close();
-            } catch (SQLException X) {
-                X.printStackTrace();
-            }
         }
     }
 
@@ -245,11 +238,14 @@ public class BillDAO{
         ArrayList<Bill> bills = new ArrayList<>();
 
         String sql = """
-            SELECT b.*, e.username
+            SELECT b.*, e.username, r.name AS role
             FROM bills b
             JOIN employees e ON b.employee_id = e.id
+            JOIN roles r ON e.role_id = r.id
             ORDER BY b.sale_date
         """;
+
+        System.out.println("Getting all bills...");
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -257,15 +253,18 @@ public class BillDAO{
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                Employee emp = employeeDAO.searchEmployee(
-                        rs.getString("username"),
-                        Role.CASHIER
-                );
+                String username = rs.getString("username");
+                String roleStr = rs.getString("role"); // get role from DB
+                Role role = Role.valueOf(roleStr);
+
+                Employee emp = employeeDAO.searchEmployee(username, role);
+                if (emp == null) continue; // skip if employee not found
 
                 Bill bill = new Bill(emp);
                 setBillData(bill, rs, con);
                 bills.add(bill);
             }
+
 
         } catch (SQLException e) {
             e.printStackTrace();

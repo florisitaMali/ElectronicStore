@@ -29,7 +29,7 @@ class MonitorStatisticsControllerIT {
         view = new MonitorStatisticsView(admin);
         controller = new MonitorStatisticsController(view);
 
-        stage.setScene(new Scene(view.getView(), 1200, 800));
+        stage.setScene(view.getView().getScene());
         stage.show();
     }
 
