@@ -275,9 +275,6 @@ public class EmployeeDAO {
         }
     }
 
-    /* =========================
-       SOFT DELETE
-       ========================= */
     public static void softDeleteEmployee(Employee e) {
         String sql = "UPDATE employees SET deleted = 1 WHERE id = ?";
         try (Connection con = DBConnection.getConnection();

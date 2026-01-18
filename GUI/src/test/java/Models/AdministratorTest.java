@@ -39,18 +39,9 @@ class AdministratorTest {
     }
 
     @Test
-    void parameterizedConstructor_shouldCreateAdministratorSuccessfully(){
+    void parameterizedConstructor_shouldCreateAdministratorSuccessfully() {
         //Creating an administrator with the full constructor
-        Administrator admin2 = new Administrator(
-                "John",
-                "Doe",
-                "admin01",
-                "password",
-                "john@company.com",
-                "123456789",
-                LocalDate.of(1990, 1, 1),
-                3000.0
-        );
+        Administrator admin2 = new Administrator("John", "Doe", "admin01", "password", "john@company.com", "123456789", LocalDate.of(1990, 1, 1), 3000.0);
 
         //Check if the role Administrator is assigned
         assertEquals(Role.ADMINISTRATOR, admin2.getRole());

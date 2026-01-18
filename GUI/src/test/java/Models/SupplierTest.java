@@ -20,7 +20,6 @@ class SupplierTest {
     void setSupplierName_shouldUpdatePropertyValue() {
         // Update supplier name
         supplier.setSupplierName("New Supplier");
-
         // Verify the update
         assertEquals("New Supplier", supplier.getSupplierName());
     }
@@ -29,7 +28,6 @@ class SupplierTest {
     void setAddress_shouldUpdatePropertyValue() {
         //Update address
         supplier.setAddress("New Address");
-
         //Verify the update
         assertEquals("New Address", supplier.getAddress());
     }
@@ -48,7 +46,8 @@ class SupplierTest {
 
     @Test
     void getProducts_shouldReturnOnlyItemsFromThisSupplier() {
-        //All of the Items from the ItemsDAO should have this supplier as their new Supplier("FakeSupplier")
+        //All of the Items from the ItemsDAO should have this supplier
+        // as their new Supplier("FakeSupplier")
         FakeItemsDAO fakeItemsDAO = new FakeItemsDAO();
         Supplier.setItemsDAO(fakeItemsDAO);
         //Set supplier name to match the fake items' supplier
@@ -76,6 +75,27 @@ class SupplierTest {
 
         //Get the products which should be empty
         ArrayList<Item> products = unknownSupplier.getProducts();
+
+        //The list must not be null but empty
+        assertNotNull(products);
+        assertTrue(products.isEmpty());
+    }
+
+    @Test
+    void getProducts_shouldReturnEmptyListIfNoItemsExist() {
+        //Use a FakeItemsDAO that returns no items
+        FakeItemsDAO emptyItemsDAO = new FakeItemsDAO(){
+            @Override
+            public ArrayList<Item> getAllItems() {
+                return new ArrayList<>(); // Return empty list
+            }
+        };
+        Supplier.setItemsDAO(emptyItemsDAO);
+        //Set supplier name to any value
+        supplier.setSupplierName("AnySupplier");
+
+        //Get the products which should be empty
+        ArrayList<Item> products = supplier.getProducts();
 
         //The list must not be null but empty
         assertNotNull(products);

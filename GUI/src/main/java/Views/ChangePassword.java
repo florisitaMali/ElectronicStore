@@ -15,6 +15,7 @@ public class ChangePassword {
 
     public Dialog<String> changePassword(Employee emp)
     {
+
         Dialog<String> dialog = new Dialog<>();
         dialog.setTitle("Change Password");
         dialog.setHeaderText("Change your password");
@@ -50,6 +51,9 @@ public class ChangePassword {
             }
             return null;
         });
+        oldPassword.setId("oldPasswordField");
+        newPassword.setId("passwordField");
+        confirmPassword.setId("confirmPasswordField");
         return dialog;
     }
 }

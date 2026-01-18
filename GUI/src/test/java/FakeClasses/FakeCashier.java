@@ -4,15 +4,11 @@ import Models.Cashier;
 import Models.Sector;
 import Models.NotValidUsername;
 
-/**
- * FakeCashier is a mock version of Cashier for testing.
- * It avoids any external dependencies and keeps sector in memory.
- */
 public class FakeCashier extends Cashier {
 
     // Default constructor
     public FakeCashier() {
-        super(); // calls Cashier default constructor
+        super();
     }
 
     // Parameterized constructor

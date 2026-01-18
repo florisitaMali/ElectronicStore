@@ -72,6 +72,27 @@ class CategoryTest {
     }
 
     @Test
+    void testGetItemsInThisCategory_noItems() {
+        //Create a category
+        Category category = new Category("Fake Category", Sector.AUDIO_EQUIPMENT);
+        //Use a FakeItemsDAO that returns no items
+        FakeItemsDAO emptyItemsDAO = new FakeItemsDAO(){
+            @Override
+            public ArrayList<Item> getAllItems() {
+                return new ArrayList<>(); // Return empty list
+            }
+        };
+        category.setItemsDAO(emptyItemsDAO);
+
+
+        ArrayList<Item> items = category.getItemsInThisCategory();
+        //Verify that no items are returned
+        assertEquals(0, items.size());
+        // Also verify that the returned list is not null
+        assertNotNull(items);
+    }
+
+    @Test
     void testToString() {
         //toString should return the category name
         Category category = new Category("Electronics", Sector.COMPUTERS);

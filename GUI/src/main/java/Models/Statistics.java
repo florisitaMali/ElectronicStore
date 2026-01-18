@@ -32,8 +32,7 @@ public class Statistics {
     }
 
     // ===== Constructor for production =====
-    public Statistics(LocalDate date, double totalItemCost, double totalWagesCost,
-                      double totalIncome, double totalRevenue, int nrOfBills) {
+    public Statistics(LocalDate date, double totalItemCost, double totalWagesCost, double totalIncome, double totalRevenue, int nrOfBills) {
         this.date = date;
         this.totalItemCost = totalItemCost;
         this.totalWagesCost = totalWagesCost;
@@ -43,28 +42,43 @@ public class Statistics {
         // Use default adapters that wrap your static DAOs
     }
 
-    public Statistics(BillRepository bill,
-                      ItemsRepository items,
-                      EmployeeRepository employee) {
+    public Statistics(BillRepository bill, ItemsRepository items, EmployeeRepository employee) {
         billRepo = bill;
         itemsRepo = items;
         employeeRepo = employee;
     }
 
-    public LocalDate getDate() { return date; }
-    public double getTotalItemCost() { return totalItemCost; }
-    public double getTotalWagesCost() { return totalWagesCost; }
-    public double getTotalIncome() { return totalIncome; }
-    public double getTotalRevenue() { return totalRevenue; }
-    public int getNrOfBills() { return nrOfBills; }
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public double getTotalItemCost() {
+        return totalItemCost;
+    }
+
+    public double getTotalWagesCost() {
+        return totalWagesCost;
+    }
+
+    public double getTotalIncome() {
+        return totalIncome;
+    }
+
+    public double getTotalRevenue() {
+        return totalRevenue;
+    }
+
+    public int getNrOfBills() {
+        return nrOfBills;
+    }
 
     public static double getTotalIncome(LocalDate startDate, LocalDate endDate, ArrayList<Bill> bills) {
-        if(bills == null || bills.isEmpty() || startDate == null || endDate == null) return 0;
-        if(startDate.isAfter(endDate)) throw new IllegalArgumentException("Start date cannot be after end date.");
+        if (bills == null || bills.isEmpty() || startDate == null || endDate == null) return 0;
+        if (startDate.isAfter(endDate)) throw new IllegalArgumentException("Start date cannot be after end date.");
 
         double totalIncome = 0;
         for (Bill b : bills) {
-            if(b.getSaleDate().toLocalDate().isBefore(startDate) || b.getSaleDate().toLocalDate().isAfter(endDate)) {
+            if (b.getSaleDate().toLocalDate().isBefore(startDate) || b.getSaleDate().toLocalDate().isAfter(endDate)) {
                 continue;
             }
             totalIncome += b.getTotalPrice();
@@ -73,9 +87,8 @@ public class Statistics {
     }
 
     public static double getTotalCostOfPurchasingItem(LocalDate startDate, LocalDate endDate) {
-        if(startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException("Start date cannot be after end date.");
-        }
+        if (startDate == null || endDate == null) throw new IllegalArgumentException("Start date and end date cannot be null.");
+        if (startDate.isAfter(endDate)) throw new IllegalArgumentException("Start date cannot be after end date.");
 
         double totalCost = getTotalCostFromBills(startDate, endDate) + getTotalCostOfItem(startDate, endDate);
 
@@ -88,8 +101,8 @@ public class Statistics {
         ArrayList<Bill> bills = billRepo.getAllBills(startDate, endDate);
         System.out.println("Before calculating total cost of purchasing items, number of bills: " + bills.size());
         for (Bill b : bills) {
-            double c =  b.getBillsCost(b, startDate, endDate);
-            if(c > 0){
+            double c = b.getBillsCost(b, startDate, endDate);
+            if (c > 0) {
                 totalCost += c;
             }
         }

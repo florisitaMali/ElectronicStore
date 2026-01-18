@@ -3,16 +3,21 @@ package Models;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 import DAO.BillDAO;
 import DAO.EmployeeDAO;
-import FakeClasses.FakeBill;
-import FakeClasses.FakeBillDAO;
-import FakeClasses.FakeEmployeeDAO;
-import FakeClasses.FakeItemsDAO;
+import FakeClasses.*;
+import jdk.dynalink.beans.StaticClass;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class StatisticsTest {
     private LocalDate startDate;
@@ -21,7 +26,7 @@ class StatisticsTest {
     @BeforeEach
     void setUp() {
         startDate = LocalDate.of(2024, 1, 1);
-        endDate   = LocalDate.now();
+        endDate = LocalDate.now();
 
         // Swap in fakes for testing
         Statistics.setBillRepository(new FakeBillDAO());
@@ -31,14 +36,7 @@ class StatisticsTest {
 
     @Test
     void constructor_shouldInitializeAllFieldsCorrectly() {
-        Statistics stats = new Statistics(
-                startDate,
-                1000.0,
-                2000.0,
-                5000.0,
-                2000.0,
-                10
-        );
+        Statistics stats = new Statistics(startDate, 1000.0, 2000.0, 5000.0, 2000.0, 10);
 
         assertEquals(startDate, stats.getDate());
         assertEquals(1000.0, stats.getTotalItemCost());
@@ -75,48 +73,204 @@ class StatisticsTest {
         assertEquals(0.0, totalIncome);
     }
 
-    @Test
-    void getTotalCostOfPurchasingItem_shouldIncludeSoldAndUnsoldItems() {
-        // Use the fake classes to avoid using the real DAOs
-        Statistics stats = new Statistics(new FakeBillDAO(), new FakeItemsDAO(), new FakeEmployeeDAO());
 
-        /// The cost of Sold Items
-        //FakeBillDAO returns one bill
-        //Each FakeBill returns 60.0 as the cost of purchasing items -> total should be 60.0
+    @ParameterizedTest
+    @MethodSource("provideBillsForTotalIncome")
+    void testGetTotalIncome(LocalDate startDate, LocalDate endDate, ArrayList<Bill> bills, double expectedTotal) {
+        double result = Statistics.getTotalIncome(startDate, endDate, bills);
+        assertEquals(expectedTotal, result, 0.001);
+    }
 
-        /// The cost of Unsold Items
-        //FakeItemsDAO returns two items with quantity 10 and 20
-        //Each item has a cost price of 100.0 -> total should be (10*100) + (20*100) = 3000.0
+    static Stream<Arguments> provideBillsForTotalIncome() {
+        Bill bill1 = new FakeBill() {
+            @Override
+            public LocalDateTime getSaleDate() {
+                return LocalDateTime.of(2026, 1, 15, 10, 0);
+            }
 
-        //Total cost = 60.0 + 3000.0 = 3060.0
-        double totalCost = stats.getTotalCostOfPurchasingItem(startDate, endDate);
-        assertEquals(3060, totalCost);
+            @Override
+            public double getTotalPrice() {
+                return 200.0;
+            }
+        };
+        Bill bill2 = new FakeBill() {
+            @Override
+            public LocalDateTime getSaleDate() {
+                return LocalDateTime.of(2026, 1, 20, 10, 0);
+            }
+
+            @Override
+            public double getTotalPrice() {
+                return 300.0;
+            }
+        };
+        Bill bill3 = new FakeBill() {
+            @Override
+            public LocalDateTime getSaleDate() {
+                return LocalDateTime.of(2026, 1, 25, 10, 0);
+            }
+
+            @Override
+            public double getTotalPrice() {
+                return 100.0;
+            }
+        };
+
+        ArrayList<Bill> emptyList = new ArrayList<>();
+        ArrayList<Bill> allBills = new ArrayList<>(List.of(bill1, bill2, bill3));
+
+        return Stream.of(
+                //null bills
+                Arguments.of(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), null, 0.0),
+                //empty bills
+                Arguments.of(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), emptyList, 0.0),
+                //startDate null
+                Arguments.of(null, LocalDate.of(2026, 1, 31), allBills, 0.0),
+                //endDate null
+                Arguments.of(LocalDate.of(2026, 1, 1), null, allBills, 0.0),
+                //no bills in date range
+                Arguments.of(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), allBills, 0.0),
+                //some bills in date range
+                Arguments.of(LocalDate.of(2026, 1, 12), LocalDate.of(2026, 1, 18), allBills, 200.0),
+                //all bills in date range
+                Arguments.of(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), allBills, 600.0));
     }
 
     @Test
-    void getTotalCostOfPurchasingItem_shouldReturnZeroForEmptyDAOs() {
-        // Swap in empty fakes
-        Statistics.setBillRepository(new FakeBillDAO(){
+    void testStartDateAfterEndDateThrows() {
+        ArrayList<Bill> bills = new ArrayList<>();
+        bills.add(new Bill());
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            Statistics.getTotalIncome(LocalDate.of(2026, 1, 31), LocalDate.of(2026, 1, 1), bills);
+        });
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideDatesAndExpectedTotalCost")
+    void testGetTotalCostOfPurchasingItem(LocalDate startDate, LocalDate endDate,
+                                          List<Bill> bills, List<Item> items, double expectedTotal) {
+
+        FakeBillDAO fakeBillDAO = new FakeBillDAO(){
             @Override
             public ArrayList<Bill> getAllBills(LocalDate start, LocalDate end) {
-                return new ArrayList<>(); // Return empty list
+                return new ArrayList<>(bills);
             }
-        });
-        // Swap in empty items DAO
-        Statistics.setItemsRepository(new FakeItemsDAO(){
+        };
+        Statistics.setBillRepository(fakeBillDAO);
+
+        FakeItemsDAO fakeItemsDAO = new FakeItemsDAO(){
             @Override
             public ArrayList<Item> getAllItems() {
-                return new ArrayList<>(); // Return empty list
+                return new ArrayList<>(items);
             }
-        });
-        Statistics.setEmployeeRepository(new FakeEmployeeDAO());
+        };
+        Statistics.setItemsRepository(fakeItemsDAO);
 
-        //Total cost should be zero
-        double totalCost = Statistics.getTotalCostOfPurchasingItem(startDate, endDate);
-        // Verify
-        assertEquals(0.0, totalCost, "Total cost should be zero when no bills or items exist");
-        // Just for safety
-        assertTrue(totalCost >= 0, "Total cost must not be negative");
+        if (startDate == null || endDate == null || (startDate != null && endDate != null && startDate.isAfter(endDate))) {
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                Statistics.getTotalCostOfPurchasingItem(startDate, endDate);
+            });
+        } else {
+            double total = Statistics.getTotalCostOfPurchasingItem(startDate, endDate);
+            Assertions.assertEquals(expectedTotal, total, 0.001);
+        }
+    }
+
+    static Stream<Arguments> provideDatesAndExpectedTotalCost() {
+        Bill bill1 = new FakeBill(){
+            @Override
+            public LocalDateTime getSaleDate() {
+                return LocalDateTime.of(2025, 2, 15, 10, 0);
+            }
+
+            @Override
+            public double getBillsCost(Bill bill, LocalDate startDate, LocalDate endDate) {
+                return 200.0;
+            }
+        };
+        Bill bill2 = new FakeBill(){
+            @Override
+            public LocalDateTime getSaleDate() {
+                return LocalDateTime.of(2025, 2, 20, 10, 0);
+            }
+
+            @Override
+            public double getBillsCost(Bill bill, LocalDate startDate, LocalDate endDate) {
+                return 200.0;
+            }
+        };
+        Bill bill3 = new FakeBill(){
+            @Override
+            public LocalDateTime getSaleDate() {
+                return LocalDateTime.of(2025, 2, 15, 10, 0);
+            }
+
+            @Override
+            public double getBillsCost(Bill bill, LocalDate startDate, LocalDate endDate) {
+                return 0;
+            }
+        };
+
+        Item item1 = new FakeItem("Item1", 0){
+            @Override
+            public double getPurchasedPrice() {
+                return 0.0;
+            }
+            @Override
+            public LocalDate getPurchasedDate() {
+                return LocalDate.of(2025,2,18);
+            }
+
+        };    // quantity 0, price 0
+        Item item2 = new FakeItem("Item2", 1){
+            @Override
+            public double getPurchasedPrice() {
+                return 0.0;
+            }
+            @Override
+            public LocalDate getPurchasedDate() {
+                return LocalDate.of(2025,2,22);
+            }
+
+        };
+        Item item3 = new FakeItem("Item3", 1){
+            @Override
+            public double getPurchasedPrice() {
+                return 200.0;
+            }
+            @Override
+            public LocalDate getPurchasedDate() {
+                return LocalDate.of(2025,2,25);
+            }
+        };
+        ArrayList<Bill> emptyBills = new ArrayList<>();
+        ArrayList<Item> emptyItems = new ArrayList<>();
+
+        return Stream.of(
+                //TC1: startDate null
+                Arguments.of(null, LocalDate.of(2025,3,1), null, null, 0.0),
+                //TC2: endDate null
+                Arguments.of(LocalDate.of(2025,1,12), null, null, null, 0.0),
+                //TC3: startDate after endDate
+                Arguments.of(LocalDate.of(2025,12,1), LocalDate.of(2025,1,12), null, null, 0.0),
+                //TC4: empty bills, empty items
+                Arguments.of(LocalDate.of(2025,2,12), LocalDate.of(2025,3,12), emptyBills, emptyItems, 0.0),
+                //TC5: some bills, empty items, cost=0
+                Arguments.of(LocalDate.of(2025,2,12), LocalDate.of(2025,3,12), List.of(bill3), emptyItems, 0.0),
+                //TC6: some bills with cost 200, empty items
+                Arguments.of(LocalDate.of(2025,2,12), LocalDate.of(2025,3,12), List.of(bill1), emptyItems, 200.0),
+                //TC7: some bills, range check
+                Arguments.of(LocalDate.of(2025,2,12), LocalDate.of(2025,3,12), List.of(bill1, bill2), emptyItems, 400.0),
+                //TC8: empty bills, some items, cost 0
+                Arguments.of(LocalDate.of(2025,2,12), LocalDate.of(2025,3,12), emptyBills, List.of(item1), 0.0),
+                //TC9: empty bills, some items with quantity=1, price=0
+                Arguments.of(LocalDate.of(2025,2,12), LocalDate.of(2025,3,12), emptyBills, List.of(item2), 0.0),
+                //TC10: empty bills, some items quantity=1, price=200
+                Arguments.of(LocalDate.of(2025,2,12), LocalDate.of(2025,3,12), emptyBills, List.of(item3), 200.0),
+                //TC11: some bills and some items, total cost
+                Arguments.of(LocalDate.of(2025,2,12), LocalDate.of(2025,3,12), List.of(bill1), List.of(item3), 400.0)
+        );
     }
 
     @Test
@@ -131,7 +285,7 @@ class StatisticsTest {
     @Test
     void getTotalCostOfSalary_shouldReturnZeroForEmptyEmployeeDAO() {
         // Swap in empty employee DAO
-        Statistics.setEmployeeRepository(new FakeEmployeeDAO(){
+        Statistics.setEmployeeRepository(new FakeEmployeeDAO() {
             @Override
             public ArrayList<Employee> getEmployees() {
                 return new ArrayList<>(); // Return empty list

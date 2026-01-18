@@ -48,6 +48,7 @@ public class Category implements Serializable {
         return temp;
     }
 
+
     @Override
     public boolean equals(Object o)
     {

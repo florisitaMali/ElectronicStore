@@ -14,17 +14,7 @@ class CashierTest {
 
     @BeforeEach
     void setUp() throws NotValidUsername {
-        cashier = new FakeCashier(
-                "Bob",
-                "Johnson",
-                "cashier01",
-                "password123",
-                "bob@company.com",
-                "9876543210",
-                LocalDate.of(1990, 8, 15),
-                2500.0,
-                Sector.HOME_ENTERTAINMENT
-        );
+        cashier = new FakeCashier("Bob", "Johnson", "cashier01", "password123", "bob@company.com", "9876543210", LocalDate.of(1990, 8, 15), 2500.0, Sector.HOME_ENTERTAINMENT);
     }
 
     @Test

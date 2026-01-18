@@ -45,9 +45,6 @@ public class ProfileController {
         return passwordDialog;
     }
 
-    /* =======================
-       BUTTON WIRING
-       ======================= */
 
     private void enableButtons() {
         setPersonalInfoBtnAction();
@@ -90,7 +87,7 @@ public class ProfileController {
 
                         Administrator admin = EmployeeDAO.getAdministrator();
                         admin.setUsername(newUsername);
-                        EmployeeDAO.addAdministrator(admin);
+                        EmployeeDAO.updateEmployee(admin);
 
                         Administrator refreshed = EmployeeDAO.getAdministrator();
                         profile.setCurrentUser(refreshed);
@@ -102,9 +99,8 @@ public class ProfileController {
                                 profile.getCurrentUser().getUsername(),
                                 profile.getCurrentUser().getRole());
 
-                        EmployeeDAO.softDeleteEmployee(emp);
                         emp.setUsername(newUsername);
-                        EmployeeDAO.addEmployee(emp);
+                        EmployeeDAO.updateEmployee(emp);
 
                         profile.setCurrentUser(emp);
                         profile.getUsername().setText(emp.getUsername());
@@ -140,17 +136,15 @@ public class ProfileController {
 
                         Administrator admin = EmployeeDAO.getAdministrator();
                         admin.setPassword(newPassword);
-                        EmployeeDAO.addAdministrator(admin);
+                        EmployeeDAO.updateEmployee(admin);
 
                         Administrator refreshed = EmployeeDAO.getAdministrator();
                         profile.setCurrentUser(refreshed);
 
                     } else {
-
                         Employee emp = profile.getCurrentUser();
-                        EmployeeDAO.softDeleteEmployee(emp);
                         emp.setPassword(newPassword);
-                        EmployeeDAO.addEmployee(emp);
+                        EmployeeDAO.updateEmployee(emp);
 
                         profile.setCurrentUser(emp);
                     }

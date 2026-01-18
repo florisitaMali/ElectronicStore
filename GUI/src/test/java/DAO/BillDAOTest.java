@@ -1,12 +1,11 @@
 package DAO;
 
-import DAO.BillDAO;
+import FakeClasses.*;
 import Models.*;
-import FakeClasses.FakeEmployeeDAO;
-import FakeClasses.FakeItemsDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,23 +18,9 @@ class BillDAOTest {
 
     @BeforeEach
     void setUp() {
-        // Inject fake DAOs
+        bill = new FakeBill();
 
-        // Create employee
-        employee = new Employee("cashier1", "Cashier", Role.CASHIER);
-
-        // Create bill
-        bill = new Bill(employee);
-        bill.setSaleDate(LocalDateTime.now());
-
-        // Add fake sold item
-        SoldItem soldItem = new SoldItem(
-                "Laptop",
-                2,
-                1200.00,
-                900.00,
-                LocalDateTime.now().toLocalDate()
-        );
+        SoldItem soldItem = new FakeSoldItem("Laptop", 2, 100);
 
         bill.getSoldItems().add(soldItem);
     }
@@ -47,9 +32,12 @@ class BillDAOTest {
 
     @Test
     void saveBill_shouldNotSave_whenTotalIsZero() {
-        Bill emptyBill = new Bill(employee);
-        emptyBill.setSaleDate(LocalDateTime.now());
-
+        Bill emptyBill = new FakeBill(){
+            @Override
+            public double getTotalPrice() {
+                return 0;
+            }
+        };
         assertDoesNotThrow(() -> BillDAO.saveBill(emptyBill));
     }
 

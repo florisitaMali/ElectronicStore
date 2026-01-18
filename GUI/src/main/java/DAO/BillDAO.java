@@ -91,7 +91,6 @@ public class BillDAO{
         }
     }
 
-    /* ===================== READ BILLS ===================== */
 
     public static ArrayList<Bill> getAllBills(LocalDate start, LocalDate end) {
 
@@ -130,7 +129,6 @@ public class BillDAO{
         return bills;
     }
 
-    /* ===================== STATISTICS ===================== */
 
     public static Map<String, Integer> getItemsSoldStatistics(
             LocalDate start,

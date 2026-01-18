@@ -97,6 +97,7 @@ public abstract class Employee implements Serializable {
     public void addPermission(Permission p ){
         accessLevel.add(p);
     }
+
     public void setUsername(String username) throws NotValidUsername {
         if (username == null || username.trim().isEmpty()) {
             throw new NotValidUsername("Username cannot be empty.");

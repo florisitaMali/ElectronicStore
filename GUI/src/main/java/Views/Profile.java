@@ -113,6 +113,9 @@ public class Profile extends View {
         otherInfo.setMaxSize(1000, 600);
         otherInfo.setAlignment(Pos.CENTER);
 
+        changeUsername.setId("changeUsernameBtn");
+        changePassword.setId("changePasswordBtn");
+
         if (getCurrentUser() instanceof Cashier) {
             otherInfo.add(createLabel("Sector:"), 0, 4);
             otherInfo.add(new Separator(Orientation.VERTICAL), 1, 4);

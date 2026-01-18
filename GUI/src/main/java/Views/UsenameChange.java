@@ -18,7 +18,6 @@ public class UsenameChange {
 
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        // Create the username label and text field
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -27,6 +26,8 @@ public class UsenameChange {
         TextField usernameField = new TextField();
         usernameField.setPromptText("New Username");
         usernameField.setText(currentUsername);
+        usernameField.setId("usernameField");
+
 
         grid.add(new Label("Username:"), 0, 0);
         grid.add(usernameField, 1, 0);
