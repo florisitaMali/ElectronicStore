@@ -85,6 +85,8 @@ public class ItemsDAO {
             VALUES (?, ?, (SELECT id FROM categories WHERE name = ?), (SELECT id FROM suppliers WHERE name = ?), ?, ?, ?, ?)
         """;
 
+        System.out.println("Category name: " + item.getItemCategory().getName());
+
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 

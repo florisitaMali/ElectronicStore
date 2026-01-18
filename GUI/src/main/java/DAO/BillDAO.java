@@ -21,7 +21,6 @@ public class BillDAO{
     private static final String BILL_FILES_DIR =
             "src/main/resources/com/example/gui/bills/";
 
-    // === Dependencies that can be mocked in tests ===
     private static EmployeeDAO employeeDAO = new EmployeeDAO();
     private static ItemsDAO itemsDAO = new ItemsDAO();
 
@@ -46,7 +45,6 @@ public class BillDAO{
 
             int billId;
             try (PreparedStatement ps = con.prepareStatement(billSql, Statement.RETURN_GENERATED_KEYS)) {
-                // Safe bill_number generation
                 long billNumber = System.currentTimeMillis();
                 ps.setLong(1, billNumber);
 
@@ -232,7 +230,6 @@ public class BillDAO{
         }
     }
 
-    /* ===================== LEGACY METHODS ===================== */
 
     public static ArrayList<Bill> getAllBills() {
         ArrayList<Bill> bills = new ArrayList<>();
@@ -254,11 +251,11 @@ public class BillDAO{
 
             while (rs.next()) {
                 String username = rs.getString("username");
-                String roleStr = rs.getString("role"); // get role from DB
+                String roleStr = rs.getString("role"); //get role from DB
                 Role role = Role.valueOf(roleStr);
 
                 Employee emp = employeeDAO.searchEmployee(username, role);
-                if (emp == null) continue; // skip if employee not found
+                if (emp == null) continue; //skip if employee not found
 
                 Bill bill = new Bill(emp);
                 setBillData(bill, rs, con);

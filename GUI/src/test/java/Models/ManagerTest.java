@@ -9,25 +9,14 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * JUnit tests for Manager class using FakeManager
- */
+
 class ManagerTest {
 
     private FakeManager manager;
 
     @BeforeEach
     void setUp() throws NotValidUsername {
-        manager = new FakeManager(
-                "Alice",
-                "Smith",
-                "manager01",
-                "password123",
-                "alice@company.com",
-                "1234567890",
-                LocalDate.of(1985, 5, 20),
-                4000.0
-        );
+        manager = new FakeManager("Alice", "Smith", "manager01", "password123", "alice@company.com", "1234567890", LocalDate.of(1985, 5, 20), 4000.0);
     }
 
     @Test

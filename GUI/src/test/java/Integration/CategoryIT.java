@@ -1,13 +1,13 @@
 package Integration;
 
-import DAO.CategoryDAO;
-import DAO.ItemsDAO;
-import DAO.ItemsDAOAdapter;
-import DAO.ItemsRepository;
+import DAO.*;
 import Models.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,8 +23,19 @@ class CategoryIT {
         electronics = new Category("Electronics", Sector.ELECTRONICS);
         laptop = new Category("Laptop", Sector.COMPUTERS);
 
+        Supplier supplier1 = new Supplier("TechSupplier");
+        Supplier supplier2 = new Supplier("GadgetWorld");
+
+        Item item1 = new Item("Smartphone", 30, electronics,
+                supplier1, 300, 500, 10);
+        Item item2 = new Item("Tablet", 20, electronics,
+                supplier2, 200, 350, 5);
+        SuppliersDAO.addSupplier(supplier1);
+        SuppliersDAO.addSupplier(supplier2);
         CategoryDAO.addCategory(electronics);
         CategoryDAO.addCategory(laptop);
+        ItemsDAO.addItem(item1);
+        ItemsDAO.addItem(item2);
     }
 
     @Test
@@ -70,5 +81,19 @@ class CategoryIT {
         assertEquals(Sector.ELECTRONICS, electronics.getSector());
     }
 
+    @AfterEach
+    public void deleteCategories() {
+        executeDelete("DELETE FROM ITEMS");
+        executeDelete("DELETE FROM CATEGORIES");
+        executeDelete("DELETE FROM SUPPLIERS");
+    }
 
+    private void executeDelete(String query) {
+        try (Connection conn = DBConnection.getConnection(); var ps = conn.prepareStatement(query)) {
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Failed to clean up categories: " + e.getMessage());
+        }
+    }
 }

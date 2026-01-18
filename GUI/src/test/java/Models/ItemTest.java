@@ -17,15 +17,7 @@ class ItemTest {
         Category fakeCategory = new FakeCategory("Electronics", Sector.MOBILE_DEVICES);
         Supplier fakeSupplier = new FakeSupplier("Supplier1");
 
-        item = new Item(
-                "Laptop",
-                10,
-                fakeCategory,
-                fakeSupplier,
-                500,
-                700,
-                1
-        );
+        item = new Item("Laptop", 10, fakeCategory, fakeSupplier, 500, 700, 1);
     }
 
     @Test
@@ -81,7 +73,7 @@ class ItemTest {
     }
 
     @Test
-    void testToString(){
+    void testToString() {
         assertEquals(item.getItemName(), item.toString());
     }
 }

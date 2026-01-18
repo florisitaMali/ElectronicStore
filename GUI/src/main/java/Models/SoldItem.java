@@ -19,7 +19,7 @@ public class SoldItem extends Item implements Serializable {
         itemsDAO = dao;
     }
 
-    public SoldItem(String n, int sq) throws ItemNotFoundException, ItemNotAvailableException {
+    public SoldItem(String n, int sq) throws ItemNotAvailableException {
         Item i = itemsDAO.searchItem(n);
         System.out.println(i.getItemName() + "  " + i.getQuantity() + " " + sq);
 
