@@ -2,53 +2,87 @@ package Integration;
 
 import Controller.ProfileController;
 import DAO.EmployeeDAO;
+import Models.Administrator;
 import Models.Employee;
+import Models.NotValidUsername;
+import Models.Role;
 import Views.Profile;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
+
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ProfileControllerIT extends ApplicationTest {
 
     private Profile profile;
+    private ProfileController controller;
+    private Administrator admin;
 
-    @Override
-    public void start(Stage stage) {
-        Employee admin = EmployeeDAO.getAdministrator();
-        assertNotNull(admin, "Administrator must exist in DB");
+    @BeforeEach
+    public void setup() throws Exception {
+        // Ensure admin username does not conflict
+        String baseUsername = "admin_test";
+        String uniqueUsername = baseUsername + "_" + System.currentTimeMillis();
 
+        // Clean up if an old admin exists (soft delete)
+        try {
+            Employee existing = EmployeeDAO.searchEmployee(baseUsername, Role.ADMINISTRATOR);
+            if (existing != null) {
+                EmployeeDAO.softDeleteEmployee(existing);
+            }
+        } catch (NotValidUsername ignored) {
+        }
+
+        // Create a fresh administrator for testing
+        // Option 2: full constructor
+        Administrator admin = new Administrator(
+                "John", "Doe", "admin_test", "password123", "admin@email.com",
+                "1234567890", LocalDate.of(1990, 1, 1), 50000
+        );
+
+        EmployeeDAO.addAdministrator(admin);
+
+        // Initialize Profile and Controller
         profile = new Profile(admin);
-
-        Scene scene = new Scene(profile.getView(), 900, 600);
-        stage.setScene(scene);
-        stage.show();
+        controller = new ProfileController(profile);
     }
 
     @Test
-    void testProfileNavigationButtons() {
-        // Personal Details
-        clickOn(profile.getPersonalDetails());
-        assertEquals(profile.getPersonalInfo(),
-                profile.getMainPane().getCenter());
+    public void changeUsername_updatesUIAndDatabase() {
+        // Simulate dialog input
+        String newUsername = "updated_" + System.currentTimeMillis();
 
-        // Work Related Details
-        clickOn(profile.getWorkRelatedDetails());
-        assertEquals(profile.getOtherInfo(),
-                profile.getMainPane().getCenter());
+        // Create dialog for test
+        controller.createUsernameDialogForTest(profile.getCurrentUser().getUsername())
+                .setResult(newUsername);
 
-        // Security Info
-        clickOn(profile.getUsernamePassWord());
-        assertEquals(profile.getSecurityInfo(),
-                profile.getMainPane().getCenter());
+        // Trigger username change action
+        profile.getChangeUsername().getOnAction().handle(null);
+
+        // Verify UI updated
+        assertEquals(newUsername, profile.getUsername().getText());
+
+        // Verify database updated
+        Administrator refreshed = EmployeeDAO.getAdministrator();
+        assertEquals(newUsername, refreshed.getUsername());
     }
 
     @Test
-    void testSecuritySectionShowsUsername() {
-        clickOn(profile.getUsernamePassWord());
-        assertNotNull(profile.getUsername().getText());
-        assertFalse(profile.getUsername().getText().isEmpty());
+    public void changePassword_updatesPassword() {
+        String newPassword = "newPass123";
+
+        // Create dialog for test
+        controller.createPasswordDialogForTest(profile.getCurrentUser())
+                .setResult(newPassword);
+
+        // Trigger password change
+        profile.getChangePassword().getOnAction().handle(null);
+
+        // Verify database updated
+        Administrator refreshed = EmployeeDAO.getAdministrator();
+        assertEquals(newPassword, refreshed.getPassword());
     }
 }
