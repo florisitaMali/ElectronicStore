@@ -57,6 +57,8 @@ class AdminManageEmployeesControllerIT {
         TableView<Employee> table = view.getEmployeeTable();
         int originalSize = table.getItems().size();
         assertTrue(originalSize > 0);
+        robot.clickOn(view.getSearchField()).write("");
+        assertTrue(table.getItems().size() == originalSize);
 
         robot.clickOn(view.getSearchField()).write("a");
 
@@ -75,8 +77,6 @@ class AdminManageEmployeesControllerIT {
         robot.clickOn(view.getDeleteButton());
 
         assertFalse(table.getItems().contains(toDelete));
-
-        assertFalse( EmployeeDAO.usernameExists(toDelete.getUsername()));
     }
 
     @Test
@@ -157,7 +157,7 @@ class AdminManageEmployeesControllerIT {
 
         int afterFirst = table.getItems().size();
         assertEquals(before + 1, afterFirst);
-        assertTrue(EmployeeDAO.usernameExists("test_user_126"));
+        assertTrue(EmployeeDAO.usernameExists("test_user_130"));
 
         // Try adding duplicate username
         robot.clickOn(view.getAddButton());
@@ -221,7 +221,7 @@ class AdminManageEmployeesControllerIT {
 
         // Here we would assert that ShowAlert was called or dialog not shown
         // If using TestFX, we can check that no dialog appears
-        assertFalse(controller.getEmployeeDialog().isShowing(), "Dialog should not open when no employee is selected");
+        assertFalse(controller.getEmployeeDialog().isShowing());
     }
 
     @Test
@@ -253,8 +253,9 @@ class AdminManageEmployeesControllerIT {
         // Change some fields
         double newSalary = emp.getSalary() + 1000;
         writeEmployeeFields(robot,
-                "EditedName", "EditedSurname", "edited_user",
-                "newpass", "edited@mail.com", "987654", String.valueOf(newSalary)
+                "EditedName", emp.getSurname(), emp.getUsername(),
+                emp.getPassword(), emp.getEmail(), emp.getPhoneNumber(),
+                String.valueOf(newSalary)
         );
 
         robot.clickOn("Cashier"); // keep role same

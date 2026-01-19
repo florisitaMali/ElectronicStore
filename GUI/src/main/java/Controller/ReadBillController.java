@@ -1,7 +1,6 @@
 package Controller;
 
 import Models.Bill;
-import Models.Role;
 import Views.PrintPane;
 import Views.ReadBillsView;
 

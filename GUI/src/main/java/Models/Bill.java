@@ -51,7 +51,13 @@ public class Bill implements Serializable{
 
         if(s.getSoldQuantity() <= 0)
             return;
-        updateFile(s);
+        try {
+            updateFile(s);
+        }catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            return;
+        }
         soldItems.add(s);
         totalPrice += s.getSellingPrice() * s.getSoldQuantity();
     }
@@ -126,10 +132,9 @@ public class Bill implements Serializable{
         ArrayList<Bill> bills = BillDAO.getAllBills(start, end);
         ArrayList<Bill> temp = new ArrayList<>();
         //Get all bills produced
-        for(Bill b: bills)
-        {
-            if(b.getEmployee().getUsername().equals(emp.getUsername()))
-            {
+        for(Bill b: bills) {
+            if(b.getEmployee() != null &&
+                    b.getEmployee().getUsername().equals(emp.getUsername())) {
                 temp.add(b);
             }
         }

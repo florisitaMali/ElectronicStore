@@ -13,17 +13,16 @@ public class EmployeeDAO {
 
     public static Employee searchEmployee(String username, Role role) {
         String sql = """
-            SELECT e.*, r.name AS role_name, s.name AS sector_name
-            FROM employees e
-            JOIN roles r ON e.role_id = r.id
-            LEFT JOIN sectors s ON e.sector_id = s.id
-            WHERE e.username = ?
-              AND r.name = ?
-              AND e.deleted = 0
-        """;
+                    SELECT e.*, r.name AS role_name, s.name AS sector_name
+                    FROM employees e
+                    JOIN roles r ON e.role_id = r.id
+                    LEFT JOIN sectors s ON e.sector_id = s.id
+                    WHERE e.username = ?
+                      AND r.name = ?
+                      AND e.deleted = 0
+                """;
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, username);
             ps.setString(2, role.name());
@@ -33,46 +32,16 @@ public class EmployeeDAO {
                 int id = rs.getInt("id");
 
                 if (role == CASHIER) {
-                    Cashier cashier = new Cashier(
-                            rs.getString("first_name"),
-                            rs.getString("last_name"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            rs.getString("email"),
-                            rs.getString("phone"),
-                            rs.getDate("birth_date").toLocalDate(),
-                            rs.getDouble("salary"),
-                            Sector.valueOf(rs.getString("sector_name"))
-                    );
+                    Cashier cashier = new Cashier(rs.getString("first_name"), rs.getString("last_name"), rs.getString("username"), rs.getString("password"), rs.getString("email"), rs.getString("phone"), rs.getDate("birth_date").toLocalDate(), rs.getDouble("salary"), Sector.valueOf(rs.getString("sector_name")));
                     cashier.setId(id);
                     getPermissionsByEmployeeId(con, id).forEach(cashier::addPermission);
                     return cashier;
-                }
-                else if (role == ADMINISTRATOR) {
-                    Administrator admin = new Administrator(
-                            rs.getString("first_name"),
-                            rs.getString("last_name"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            rs.getString("email"),
-                            rs.getString("phone"),
-                            rs.getDate("birth_date").toLocalDate(),
-                            rs.getDouble("salary")
-                    );
+                } else if (role == ADMINISTRATOR) {
+                    Administrator admin = new Administrator(rs.getString("first_name"), rs.getString("last_name"), rs.getString("username"), rs.getString("password"), rs.getString("email"), rs.getString("phone"), rs.getDate("birth_date").toLocalDate(), rs.getDouble("salary"));
                     admin.setId(id);
                     return admin;
-                }
-                else {
-                    Manager manager = new Manager(
-                            rs.getString("first_name"),
-                            rs.getString("last_name"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            rs.getString("email"),
-                            rs.getString("phone"),
-                            rs.getDate("birth_date").toLocalDate(),
-                            rs.getDouble("salary")
-                    );
+                } else {
+                    Manager manager = new Manager(rs.getString("first_name"), rs.getString("last_name"), rs.getString("username"), rs.getString("password"), rs.getString("email"), rs.getString("phone"), rs.getDate("birth_date").toLocalDate(), rs.getDouble("salary"));
                     manager.setId(id);
                     getPermissionsByEmployeeId(con, id).forEach(manager::addPermission);
                     getManagerSectors(con, id).forEach(manager::addSector);
@@ -88,15 +57,13 @@ public class EmployeeDAO {
 
     public static void addAdministrator(Administrator admin) {
         String sql = """
-            INSERT INTO employees
-            (first_name, last_name, username, password, email, phone, birth_date, salary, role_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+                    INSERT INTO employees
+                    (first_name, last_name, username, password, email, phone, birth_date, salary, role_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
 
         String checkSql = "SELECT 1 FROM employees WHERE username = ? AND deleted = 0";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             PreparedStatement checkPs = con.prepareStatement(checkSql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql); PreparedStatement checkPs = con.prepareStatement(checkSql)) {
             checkPs.setString(1, admin.getUsername());
             ResultSet rs = checkPs.executeQuery();
             if (rs.next()) {
@@ -120,23 +87,19 @@ public class EmployeeDAO {
         }
     }
 
-    /* =========================
-       GET EMPLOYEES
-       ========================= */
     public static ArrayList<Employee> getEmployees(Employee e) {
         ArrayList<Employee> employees = new ArrayList<>();
 
         String sql = """
-            SELECT e.*, r.name AS role_name, s.name AS sector_name
-            FROM employees e
-            JOIN roles r ON e.role_id = r.id
-            LEFT JOIN sectors s ON e.sector_id = s.id
-            WHERE e.deleted = 0
-              AND e.username <> ?
-        """;
+                    SELECT e.*, r.name AS role_name, s.name AS sector_name
+                    FROM employees e
+                    JOIN roles r ON e.role_id = r.id
+                    LEFT JOIN sectors s ON e.sector_id = s.id
+                    WHERE e.deleted = 0
+                      AND e.username <> ?
+                """;
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, e.getUsername());
             ResultSet rs = ps.executeQuery();
@@ -146,46 +109,16 @@ public class EmployeeDAO {
                 Role role = Role.valueOf(rs.getString("role_name"));
 
                 if (role == CASHIER) {
-                    Cashier cashier = new Cashier(
-                            rs.getString("first_name"),
-                            rs.getString("last_name"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            rs.getString("email"),
-                            rs.getString("phone"),
-                            rs.getDate("birth_date").toLocalDate(),
-                            rs.getDouble("salary"),
-                            Sector.valueOf(rs.getString("sector_name"))
-                    );
+                    Cashier cashier = new Cashier(rs.getString("first_name"), rs.getString("last_name"), rs.getString("username"), rs.getString("password"), rs.getString("email"), rs.getString("phone"), rs.getDate("birth_date").toLocalDate(), rs.getDouble("salary"), Sector.valueOf(rs.getString("sector_name")));
                     cashier.setId(id);
                     getPermissionsByEmployeeId(con, id).forEach(cashier::addPermission);
                     employees.add(cashier);
-                }
-                else if (role == ADMINISTRATOR) {
-                    Administrator admin = new Administrator(
-                            rs.getString("first_name"),
-                            rs.getString("last_name"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            rs.getString("email"),
-                            rs.getString("phone"),
-                            rs.getDate("birth_date").toLocalDate(),
-                            rs.getDouble("salary")
-                    );
+                } else if (role == ADMINISTRATOR) {
+                    Administrator admin = new Administrator(rs.getString("first_name"), rs.getString("last_name"), rs.getString("username"), rs.getString("password"), rs.getString("email"), rs.getString("phone"), rs.getDate("birth_date").toLocalDate(), rs.getDouble("salary"));
                     admin.setId(id);
                     employees.add(admin);
-                }
-                else {
-                    Manager manager = new Manager(
-                            rs.getString("first_name"),
-                            rs.getString("last_name"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            rs.getString("email"),
-                            rs.getString("phone"),
-                            rs.getDate("birth_date").toLocalDate(),
-                            rs.getDouble("salary")
-                    );
+                } else {
+                    Manager manager = new Manager(rs.getString("first_name"), rs.getString("last_name"), rs.getString("username"), rs.getString("password"), rs.getString("email"), rs.getString("phone"), rs.getDate("birth_date").toLocalDate(), rs.getDouble("salary"));
                     manager.setId(id);
                     getPermissionsByEmployeeId(con, id).forEach(manager::addPermission);
                     getManagerSectors(con, id).forEach(manager::addSector);
@@ -199,9 +132,6 @@ public class EmployeeDAO {
         return employees;
     }
 
-    /* =========================
-       ADD EMPLOYEE
-       ========================= */
     public static void addEmployee(Employee e) throws NotValidUsername {
 
         if (usernameExists(e.getUsername())) {
@@ -209,13 +139,12 @@ public class EmployeeDAO {
         }
 
         String sql = """
-            INSERT INTO employees
-            (first_name, last_name, username, password, email, phone, birth_date, salary, role_id, sector_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+                    INSERT INTO employees
+                    (first_name, last_name, username, password, email, phone, birth_date, salary, role_id, sector_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             fillEmployeeStatement(ps, e);
             ps.executeUpdate();
@@ -241,25 +170,9 @@ public class EmployeeDAO {
             throw new RuntimeException("Username already exists: " + e.getUsername());
         }
 
-        String sql = """
-            UPDATE employees
-            SET first_name = ?,
-                last_name = ?,
-                username = ?,
-                password = ?,
-                email = ?,
-                phone = ?,
-                birth_date = ?,
-                salary = ?,
-                role_id = ?,
-                sector_id = ?
-            WHERE id = ?
-              AND deleted = 0
-        """;
+        String sql = " UPDATE employees SET first_name = ?, last_name = ?, username = ?, password = ?, email = ?, phone = ?, birth_date = ?, salary = ?, role_id = ?, sector_id = ? WHERE id = ? AND deleted = 0 ";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             fillEmployeeStatement(ps, e);
             ps.setInt(11, e.getId());
             ps.executeUpdate();
@@ -277,8 +190,7 @@ public class EmployeeDAO {
 
     public static void softDeleteEmployee(Employee e) {
         String sql = "UPDATE employees SET deleted = 1 WHERE id = ?";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, e.getId());
             ps.executeUpdate();
         } catch (SQLException ex) {
@@ -286,41 +198,31 @@ public class EmployeeDAO {
         }
     }
 
-    /* =========================
-       PERMISSIONS
-       ========================= */
     private static void updatePermissions(Connection con, Employee e) throws SQLException {
         deleteEmployeePermissions(con, e.getId());
         savePermissions(con, e.getId(), e.getAccessLevel());
     }
 
     private static void deleteEmployeePermissions(Connection con, int employeeId) throws SQLException {
-        try (PreparedStatement ps =
-                     con.prepareStatement("DELETE FROM employee_permissions WHERE employee_id = ?")) {
+        try (PreparedStatement ps = con.prepareStatement("DELETE FROM employee_permissions WHERE employee_id = ?")) {
             ps.setInt(1, employeeId);
             ps.executeUpdate();
         }
     }
 
-    /* =========================
-       MANAGER SECTORS
-       ========================= */
     private static void updateManagerSectors(Connection con, Manager m) throws SQLException {
         deleteManagerSectors(con, m.getId());
         saveManagerSectors(con, m.getId(), m.getSectors());
     }
 
     private static void deleteManagerSectors(Connection con, int employeeId) throws SQLException {
-        try (PreparedStatement ps =
-                     con.prepareStatement("DELETE FROM employee_sectors WHERE employee_id = ?")) {
+        try (PreparedStatement ps = con.prepareStatement("DELETE FROM employee_sectors WHERE employee_id = ?")) {
             ps.setInt(1, employeeId);
             ps.executeUpdate();
         }
     }
 
-    /* =========================
-       HELPERS
-       ========================= */
+
     private static void fillEmployeeStatement(PreparedStatement ps, Employee e) throws SQLException {
         ps.setString(1, e.getName());
         ps.setString(2, e.getSurname());
@@ -344,15 +246,11 @@ public class EmployeeDAO {
     }
 
     public static boolean usernameExistsExceptSelf(String username, int id) {
-        return existsQuery(
-                "SELECT 1 FROM employees WHERE username = ? AND id <> ?",
-                username, id
-        );
+        return existsQuery("SELECT 1 FROM employees WHERE username = ? AND id <> ?", username, id);
     }
 
     private static boolean existsQuery(String sql, Object... params) {
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             for (int i = 0; i < params.length; i++) {
                 ps.setObject(i + 1, params[i]);
@@ -392,8 +290,7 @@ public class EmployeeDAO {
         throw new SQLException("Not found: " + value);
     }
 
-    private static void savePermissions(Connection con, int employeeId, List<Permission> permissions)
-            throws SQLException {
+    private static void savePermissions(Connection con, int employeeId, List<Permission> permissions) throws SQLException {
 
         String sql = "INSERT INTO employee_permissions (employee_id, permission_id) VALUES (?, ?)";
 
@@ -407,17 +304,16 @@ public class EmployeeDAO {
         }
     }
 
-    private static List<Permission> getPermissionsByEmployeeId(Connection con, int employeeId)
-            throws SQLException {
+    private static List<Permission> getPermissionsByEmployeeId(Connection con, int employeeId) throws SQLException {
 
         List<Permission> permissions = new ArrayList<>();
 
         String sql = """
-            SELECT p.name
-            FROM permissions p
-            JOIN employee_permissions ep ON ep.permission_id = p.id
-            WHERE ep.employee_id = ?
-        """;
+                    SELECT p.name
+                    FROM permissions p
+                    JOIN employee_permissions ep ON ep.permission_id = p.id
+                    WHERE ep.employee_id = ?
+                """;
 
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
@@ -429,17 +325,16 @@ public class EmployeeDAO {
         return permissions;
     }
 
-    private static List<Sector> getManagerSectors(Connection con, int employeeId)
-            throws SQLException {
+    private static List<Sector> getManagerSectors(Connection con, int employeeId) throws SQLException {
 
         List<Sector> sectors = new ArrayList<>();
 
         String sql = """
-            SELECT s.name
-            FROM sectors s
-            JOIN employee_sectors es ON es.sector_id = s.id
-            WHERE es.employee_id = ?
-        """;
+                    SELECT s.name
+                    FROM sectors s
+                    JOIN employee_sectors es ON es.sector_id = s.id
+                    WHERE es.employee_id = ?
+                """;
 
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
@@ -451,8 +346,7 @@ public class EmployeeDAO {
         return sectors;
     }
 
-    private static void saveManagerSectors(Connection con, int employeeId, List<Sector> sectors)
-            throws SQLException {
+    private static void saveManagerSectors(Connection con, int employeeId, List<Sector> sectors) throws SQLException {
 
         String sql = "INSERT INTO employee_sectors (employee_id, sector_id) VALUES (?, ?)";
 
@@ -468,29 +362,19 @@ public class EmployeeDAO {
 
     public static Administrator getAdministrator() {
         String sql = """
-            SELECT e.*, r.name AS role_name
-            FROM employees e
-            JOIN roles r ON e.role_id = r.id
-            WHERE r.name = 'ADMINISTRATOR' AND e.deleted = 0
-            LIMIT 1
-        """;
+                    SELECT e.*, r.name AS role_name
+                    FROM employees e
+                    JOIN roles r ON e.role_id = r.id
+                    WHERE r.name = 'ADMINISTRATOR' AND e.deleted = 0
+                    LIMIT 1
+                """;
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                Administrator admin = new Administrator(
-                        rs.getString("first_name"),
-                        rs.getString("last_name"),
-                        rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("email"),
-                        rs.getString("phone"),
-                        rs.getDate("birth_date").toLocalDate(),
-                        rs.getDouble("salary")
-                );
+                Administrator admin = new Administrator(rs.getString("first_name"), rs.getString("last_name"), rs.getString("username"), rs.getString("password"), rs.getString("email"), rs.getString("phone"), rs.getDate("birth_date").toLocalDate(), rs.getDouble("salary"));
                 admin.setId(rs.getInt("id"));
                 return admin;
             }
@@ -504,14 +388,14 @@ public class EmployeeDAO {
     public static List<Employee> getEmployeesOfSectors(List<Sector> sectors) {
         List<Employee> employees = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
-            SELECT e.*, r.name AS role_name, s.name AS sector_name
-            FROM employees e
-            JOIN roles r ON e.role_id = r.id
-            LEFT JOIN sectors s ON e.sector_id = s.id
-            WHERE e.deleted = 0
-              AND e.role_id = (SELECT id FROM roles WHERE name = 'CASHIER')
-              AND e.sector_id IN (
-        """);
+                    SELECT e.*, r.name AS role_name, s.name AS sector_name
+                    FROM employees e
+                    JOIN roles r ON e.role_id = r.id
+                    LEFT JOIN sectors s ON e.sector_id = s.id
+                    WHERE e.deleted = 0
+                      AND e.role_id = (SELECT id FROM roles WHERE name = 'CASHIER')
+                      AND e.sector_id IN (
+                """);
 
         for (int i = 0; i < sectors.size(); i++) {
             sql.append("?");
@@ -521,8 +405,7 @@ public class EmployeeDAO {
         }
         sql.append(")");
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql.toString())) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < sectors.size(); i++) {
                 ps.setInt(i + 1, getSectorId(sectors.get(i)));
@@ -531,17 +414,7 @@ public class EmployeeDAO {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                Cashier cashier = new Cashier(
-                        rs.getString("first_name"),
-                        rs.getString("last_name"),
-                        rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("email"),
-                        rs.getString("phone"),
-                        rs.getDate("birth_date").toLocalDate(),
-                        rs.getDouble("salary"),
-                        Sector.valueOf(rs.getString("sector_name"))
-                );
+                Cashier cashier = new Cashier(rs.getString("first_name"), rs.getString("last_name"), rs.getString("username"), rs.getString("password"), rs.getString("email"), rs.getString("phone"), rs.getDate("birth_date").toLocalDate(), rs.getDouble("salary"), Sector.valueOf(rs.getString("sector_name")));
                 cashier.setId(rs.getInt("id"));
                 getPermissionsByEmployeeId(con, cashier.getId()).forEach(cashier::addPermission);
                 employees.add(cashier);

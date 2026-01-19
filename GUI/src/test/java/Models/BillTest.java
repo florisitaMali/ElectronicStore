@@ -1,78 +1,96 @@
 package Models;
 
+import DAO.BillDAO;
+import DAO.EmployeeDAO;
 import FakeClasses.FakeBill;
+import FakeClasses.FakeBillDAO;
+import FakeClasses.FakeEmployeeDAO;
 import FakeClasses.FakeSoldItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.Arguments;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class BillTest {
 
-    private FakeBill bill;
+    private Employee admin = EmployeeDAO.getAdministrator();
+    private Employee otherEmployee;
 
     @BeforeEach
     void setUp() {
-        bill = new FakeBill();
+        admin = EmployeeDAO.getAdministrator();
+        otherEmployee = new Cashier();
     }
 
-    @Test
-    void getTotalPrice_shouldReturnFakeValue() {
-        assertEquals(100.0, bill.getTotalPrice());
-    }
-
-    @Test
-    void getBillNumber_shouldReturnFakeValue() {
-        assertEquals(111111, bill.getBillNumber());
-    }
-
-    @Test
-    void getSaleDate_shouldReturnFixedDate() {
-        assertEquals("2025-06-01T12:00", bill.getSaleDate().toString());
-    }
-
-    @Test
-    void getEmployee_shouldReturnCashier() {
-        assertEquals(Role.CASHIER, bill.getEmployee().getRole());
-    }
-
-    @Test
-    void getSoldItems_shouldReturnFakeItems() {
-        ArrayList<SoldItem> items = bill.getSoldItems();
-        assertEquals(2, items.size());
-        assertEquals("I1", items.get(0).getItemName());
-        assertEquals(2, items.get(0).getSoldQuantity());
-        assertEquals("I2", items.get(1).getItemName());
-        assertEquals(3, items.get(1).getSoldQuantity());
-    }
-
-    @Test
-    void getBillsCost_shouldReturnFakeValue() {
-        double cost = bill.getBillsCost(bill, LocalDate.now().minusDays(1), LocalDate.now().plusDays(1));
-        assertEquals(60.0, cost);
-    }
-
-    @Test
-    void getBills_shouldReturnListWithOneFakeBill() {
-        ArrayList<Bill> bills = bill.getBills(bill.getEmployee(), LocalDate.now(), LocalDate.now());
-        assertEquals(1, bills.size());
-        assertTrue(bills.get(0) instanceof FakeBill);
-    }
 
     @Test
     void addSoldItems_shouldDoNothing() {
+        Bill bill = new Bill();
         bill.addSoldItems(new FakeSoldItem("X", 1, 10));
-        // No exception, no change expected
-        assertEquals(2, bill.getSoldItems().size()); // still returns fake items
+
+        assertEquals(0, bill.getSoldItems().size());
     }
 
     @Test
     void deleteSoldItem_shouldDoNothing() {
+        Bill bill = new Bill();
         bill.deleteSoldItem(new FakeSoldItem("I1", 2, 30));
-        // No exception, still returns fake items
-        assertEquals(2, bill.getSoldItems().size());
+        assertEquals(0, bill.getSoldItems().size());
     }
+
+    @Test
+    void getBillsCost_shouldReturnFakeValue() {
+        Bill bill = new Bill();
+        bill.addSoldItems(new FakeSoldItem("TEST_ITEM", 2, 30.0));
+
+        // FakeSoldItem returns cost of 10.0 per item
+        double cost = bill.getBillsCost(bill, LocalDate.now().minusDays(1), LocalDate.now().plusDays(1));
+        assertEquals(20.0, cost);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidDatesForCost")
+    void getBillsCost_invalidDates_throwsException(LocalDate start, LocalDate end) {
+        Bill bill = new Bill();
+        assertThrows(IllegalArgumentException.class, () -> bill.getBillsCost(bill, start, end));
+    }
+
+    static Stream<Arguments> provideInvalidDatesForCost() {
+        return Stream.of(Arguments.of(null, LocalDate.now().plusDays(1)), Arguments.of(LocalDate.now().minusDays(1), null), Arguments.of(LocalDate.now().plusDays(1), LocalDate.now()));
+    }
+
+
+    @Test
+    void getBills_shouldReturnListWithOneFakeBill() {
+        Bill bill = new Bill(admin);
+        bill.addSoldItems(new SoldItem("TEST_ITEM",1));
+        BillDAO.setEmployeeDAO(new FakeEmployeeDAO());
+        BillDAO.saveBill(bill);
+
+        ArrayList<Bill> bills = bill.getBills(admin, LocalDate.now().minusDays(1), LocalDate.now());
+        assertEquals(1, bills.size());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidDatesForBills")
+    void getBills_invalidDates_throwsException(LocalDate start, LocalDate end) {
+        Bill bill = new Bill();
+        assertThrows(IllegalArgumentException.class, () -> bill.getBills(admin, start, end));
+    }
+
+    static Stream<Arguments> provideInvalidDatesForBills() {
+        return Stream.of(Arguments.of(null, LocalDate.now()),
+                Arguments.of(LocalDate.now(), null),
+                Arguments.of(LocalDate.now().plusDays(1), LocalDate.now()));
+    }
+
+
 }

@@ -34,4 +34,13 @@ public class FakeSoldItem extends SoldItem {
     public double getSellingPrice() {
         return sellingPrice;
     }
+
+    @Override
+    public double getPurchasedPrice() {
+        return 10;
+    }
+    @Override
+    public LocalDate getPurchasedDate() {
+        return LocalDate.now();
+    }
 }

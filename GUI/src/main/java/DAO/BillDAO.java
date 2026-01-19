@@ -21,14 +21,14 @@ public class BillDAO{
     private static final String BILL_FILES_DIR =
             "src/main/resources/com/example/gui/bills/";
 
-    private static EmployeeDAO employeeDAO = new EmployeeDAO();
-    private static ItemsDAO itemsDAO = new ItemsDAO();
+    private static EmployeeRepository employeeDAO= new EmployeeDAOAdapter();
+    private static ItemsRepository itemsDAO = new ItemsDAOAdapter() ;
 
-    public static void setEmployeeDAO(EmployeeDAO dao) {
+    public static void setEmployeeDAO(EmployeeRepository dao) {
         employeeDAO = dao;
     }
 
-    public static void setItemsDAO(ItemsDAO dao) {
+    public static void setItemsDAO(ItemsRepository dao) {
         itemsDAO = dao;
     }
 
@@ -111,13 +111,17 @@ public class BillDAO{
             ps.setDate(2, Date.valueOf(end));
 
             ResultSet rs = ps.executeQuery();
+            System.out.println(rs.next());
 
             while (rs.next()) {
                 Employee emp = employeeDAO.searchEmployee(
                         rs.getString("username"),
                         Role.CASHIER
                 );
+                System.out.println(rs.getString("username"));
 
+                System.out.println(employeeDAO.getEmployees().size());
+                System.out.println(emp != null);
                 Bill bill = new Bill(emp);
                 setBillData(bill, rs, con);
                 bills.add(bill);
@@ -162,7 +166,6 @@ public class BillDAO{
         return stats;
     }
 
-    /* ===================== HELPERS ===================== */
 
     private static void setBillData(
             Bill bill,
