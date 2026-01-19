@@ -18,11 +18,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(ApplicationExtension.class)
 class CostIncomeControllerIT {
@@ -45,7 +42,6 @@ class CostIncomeControllerIT {
     }
 
 
-    // --- Valid case ---
     @Test
     void calculateStatisticsWithValidDatesShowsResults(FxRobot robot) {
         LocalDate start = LocalDate.now().minusDays(3);
@@ -118,18 +114,21 @@ class CostIncomeControllerIT {
     @Test
     void calculateStatisticsWithBillsAggregatesCorrectly(FxRobot robot) {
         // Create test items
+        try {
+            CategoryDAO.addCategory(new Category("TEST_CATEGORY", Sector.COMPUTERS));
+            SuppliersDAO.addSupplier(new Supplier("Test Supplier"));
+        }catch (Exception e){}
         Item item1 = ItemsDAO.searchItem("TEST_ITEM_1");
-        if(item1 == null) {
+        if (item1 == null) {
             item1 = new Item("TEST_ITEM_1", 20, new Category("TEST_CATEGORY", Sector.COMPUTERS), new Supplier("Test Supplier"), 100.0, 150.0, 2);
             ItemsDAO.addItem(item1);
         }
 
         Item item2 = ItemsDAO.searchItem("TEST_ITEM_2");
-        if(item2 == null) {
+        if (item2 == null) {
             item2 = new Item("TEST_ITEM_2", 20, new Category("TEST_CATEGORY", Sector.COMPUTERS), new Supplier("Test Supplier"), 90.0, 200.0, 2);
             ItemsDAO.addItem(item2);
         }
-
         double totalIncome = 0.0;
         // Create bills
         Bill b1 = new Bill(view.getCurrentUser());

@@ -360,4 +360,35 @@ class EmployeeDAOTest {
             ps3.executeUpdate();
         } catch (Exception ignored) {}
     }
+
+    @Test
+    void updateEmployee_updatesPermissionsCorrectly() {
+        Cashier cashier = new Cashier(
+                "Cash", "One", "cash1", "pass", "c@c.com", "111",
+                LocalDate.of(1995, 5, 5), 3000, Sector.CAMERA
+        );
+
+        cashier.addPermission(Permission.GENERATE_PRINTABLE_BILL);
+        EmployeeDAO.addEmployee(cashier);
+
+        Employee saved = EmployeeDAO.searchEmployee("cash1", CASHIER);
+        assertNotNull(saved);
+
+        saved.getAccessLevel().clear();
+        saved.addPermission(Permission.VIEW_BILLS_AND_TOTAL_FOR_CURRENT_DAY);
+        saved.addPermission(Permission.ENTER_NEW_ITEM_CATEGORIES);
+
+        EmployeeDAO.updateEmployee(saved);
+
+        Employee updated = EmployeeDAO.searchEmployee("cash1", CASHIER);
+        assertNotNull(updated);
+
+        List<Permission> permissions = updated.getAccessLevel();
+
+        assertEquals(2, permissions.size());
+        assertTrue(permissions.contains(Permission.ENTER_NEW_ITEM_CATEGORIES));
+        assertTrue(permissions.contains(Permission.VIEW_BILLS_AND_TOTAL_FOR_CURRENT_DAY));
+        assertFalse(permissions.contains(Permission.GENERATE_PRINTABLE_BILL));
+    }
+
 }

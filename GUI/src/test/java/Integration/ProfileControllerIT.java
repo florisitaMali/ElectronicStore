@@ -27,7 +27,6 @@ class ProfileControllerIT {
     private static final String BASE_USERNAME = "test_user";
     private static final String UPDATED_USERNAME = "updated_user";
 
-    // -------------------- SETUP --------------------
 
     @Start
     void start(Stage stage) {

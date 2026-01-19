@@ -36,7 +36,6 @@ class AdminManageEmployeesControllerIT {
 
     @Start
     void start(Stage stage) {
-        // Use a real administrator from DB
         adminUser = EmployeeDAO.getAdministrator();
         assertNotNull(adminUser, "Admin user must exist in database");
 

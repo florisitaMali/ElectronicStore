@@ -16,13 +16,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BillDAO{
+public class BillDAO {
 
-    private static final String BILL_FILES_DIR =
-            "src/main/resources/com/example/gui/bills/";
+    private static final String BILL_FILES_DIR = "src/main/resources/com/example/gui/bills/";
 
-    private static EmployeeRepository employeeDAO= new EmployeeDAOAdapter();
-    private static ItemsRepository itemsDAO = new ItemsDAOAdapter() ;
+    private static EmployeeRepository employeeDAO = new EmployeeDAOAdapter();
+    private static ItemsRepository itemsDAO = new ItemsDAOAdapter();
 
     public static void setEmployeeDAO(EmployeeRepository dao) {
         employeeDAO = dao;
@@ -39,9 +38,9 @@ public class BillDAO{
             con.setAutoCommit(false);
 
             String billSql = """
-            INSERT INTO bills (bill_number, sale_date, employee_id, total)
-            VALUES (?, ?, ?, ?)
-        """;
+                        INSERT INTO bills (bill_number, sale_date, employee_id, total)
+                        VALUES (?, ?, ?, ?)
+                    """;
 
             int billId;
             try (PreparedStatement ps = con.prepareStatement(billSql, Statement.RETURN_GENERATED_KEYS)) {
@@ -51,7 +50,7 @@ public class BillDAO{
                 ps.setTimestamp(2, Timestamp.valueOf(bill.getSaleDate()));
 
                 int empId = getEmployeeId(con, bill.getEmployee());
-                if (empId == 0) throw new SQLException("Employee not found in DB");
+                if (empId == -1) throw new SQLException("Employee not found in DB");
                 ps.setInt(3, empId);
 
                 ps.setDouble(4, bill.getTotalPrice());
@@ -64,9 +63,9 @@ public class BillDAO{
             }
 
             String itemsSql = """
-            INSERT INTO bill_items (bill_id, item_id, quantity, price)
-            VALUES (?, ?, ?, ?)
-        """;
+                        INSERT INTO bill_items (bill_id, item_id, quantity, price)
+                        VALUES (?, ?, ?, ?)
+                    """;
 
             try (PreparedStatement ps = con.prepareStatement(itemsSql)) {
                 for (SoldItem s : bill.getSoldItems()) {
@@ -83,7 +82,6 @@ public class BillDAO{
             }
 
             con.commit();
-
             createBillFile(bill);
 
         } catch (Exception e) {
@@ -97,15 +95,14 @@ public class BillDAO{
         ArrayList<Bill> bills = new ArrayList<>();
 
         String sql = """
-            SELECT b.*, e.username
-            FROM bills b
-            JOIN employees e ON b.employee_id = e.id
-            WHERE DATE(b.sale_date) BETWEEN ? AND ?
-            ORDER BY b.sale_date
-        """;
+                    SELECT b.*, e.username
+                    FROM bills b
+                    JOIN employees e ON b.employee_id = e.id
+                    WHERE DATE(b.sale_date) BETWEEN ? AND ?
+                    ORDER BY b.sale_date
+                """;
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setDate(1, Date.valueOf(start));
             ps.setDate(2, Date.valueOf(end));
@@ -114,10 +111,7 @@ public class BillDAO{
             System.out.println(rs.next());
 
             while (rs.next()) {
-                Employee emp = employeeDAO.searchEmployee(
-                        rs.getString("username"),
-                        Role.CASHIER
-                );
+                Employee emp = employeeDAO.searchEmployee(rs.getString("username"), Role.CASHIER);
                 System.out.println(rs.getString("username"));
 
                 System.out.println(employeeDAO.getEmployees().size());
@@ -134,23 +128,20 @@ public class BillDAO{
     }
 
 
-    public static Map<String, Integer> getItemsSoldStatistics(
-            LocalDate start,
-            LocalDate end) {
+    public static Map<String, Integer> getItemsSoldStatistics(LocalDate start, LocalDate end) {
 
         Map<String, Integer> stats = new HashMap<>();
 
         String sql = """
-            SELECT i.name, SUM(bi.quantity) qty
-            FROM bill_items bi
-            JOIN items i ON bi.item_id = i.id
-            JOIN bills b ON bi.bill_id = b.id
-            WHERE DATE(b.sale_date) BETWEEN ? AND ?
-            GROUP BY i.name
-        """;
+                    SELECT i.name, SUM(bi.quantity) qty
+                    FROM bill_items bi
+                    JOIN items i ON bi.item_id = i.id
+                    JOIN bills b ON bi.bill_id = b.id
+                    WHERE DATE(b.sale_date) BETWEEN ? AND ?
+                    GROUP BY i.name
+                """;
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setDate(1, Date.valueOf(start));
             ps.setDate(2, Date.valueOf(end));
@@ -167,53 +158,43 @@ public class BillDAO{
     }
 
 
-    private static void setBillData(
-            Bill bill,
-            ResultSet rs,
-            Connection con) throws SQLException {
+    private static void setBillData(Bill bill, ResultSet rs, Connection con) throws SQLException {
 
         bill.getSoldItems().addAll(getBillItems(con, rs.getInt("id")));
     }
 
-    private static List<SoldItem> getBillItems(Connection con, int billId)
-            throws SQLException {
+    private static List<SoldItem> getBillItems(Connection con, int billId) throws SQLException {
 
         List<SoldItem> items = new ArrayList<>();
 
         String sql = """
-            SELECT i.name, bi.quantity, bi.price, i.purchased_price, i.purchased_date
-            FROM bill_items bi
-            JOIN items i ON bi.item_id = i.id
-            WHERE bi.bill_id = ?
-        """;
+                    SELECT i.name, bi.quantity, bi.price, i.purchased_price, i.purchased_date
+                    FROM bill_items bi
+                    JOIN items i ON bi.item_id = i.id
+                    WHERE bi.bill_id = ?
+                """;
 
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, billId);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                items.add(new SoldItem(
-                        rs.getString("name"),
-                        rs.getInt("quantity"),
-                        rs.getDouble("price"),
-                        rs.getDouble("purchased_price"),
-                        rs.getDate("purchased_date").toLocalDate()
-                ));
+                items.add(new SoldItem(rs.getString("name"), rs.getInt("quantity"), rs.getDouble("price"), rs.getDouble("purchased_price"), rs.getDate("purchased_date").toLocalDate()));
             }
         }
         return items;
     }
 
-    private static int getEmployeeId(Connection con, Employee e)
-            throws SQLException {
+    private static int getEmployeeId(Connection con, Employee e) {
 
         String sql = "SELECT id FROM employees WHERE username = ?";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, e.getUsername());
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt("id");
-        }
-        throw new SQLException("Employee not found");
+        }catch (Exception ex){}
+
+        return -1;
     }
 
     private static void createBillFile(Bill bill) throws IOException {
@@ -221,10 +202,7 @@ public class BillDAO{
         File dir = new File(BILL_FILES_DIR);
         if (!dir.exists()) dir.mkdirs();
 
-        File file = new File(
-                BILL_FILES_DIR +
-                        "bill_" + bill.getBillNumber() + ".txt"
-        );
+        File file = new File(BILL_FILES_DIR + "bill_" + bill.getBillNumber() + ".txt");
 
         try (PrintWriter out = new PrintWriter(file)) {
             out.println(bill.printBill());
@@ -236,17 +214,16 @@ public class BillDAO{
         ArrayList<Bill> bills = new ArrayList<>();
 
         String sql = """
-            SELECT b.*, e.username, r.name AS role
-            FROM bills b
-            JOIN employees e ON b.employee_id = e.id
-            JOIN roles r ON e.role_id = r.id
-            ORDER BY b.sale_date
-        """;
+                    SELECT b.*, e.username, r.name AS role
+                    FROM bills b
+                    JOIN employees e ON b.employee_id = e.id
+                    JOIN roles r ON e.role_id = r.id
+                    ORDER BY b.sale_date
+                """;
 
         System.out.println("Getting all bills...");
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ResultSet rs = ps.executeQuery();
 
@@ -277,8 +254,7 @@ public class BillDAO{
     public static long getNumberOfBills() {
         String sql = "SELECT COUNT(*) AS total FROM bills WHERE DATE(sale_date) = CURDATE()";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
