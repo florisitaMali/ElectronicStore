@@ -14,7 +14,6 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StatisticsFullIntegrationTest {
 
     private static BillRepository billRepo;
@@ -41,9 +40,7 @@ public class StatisticsFullIntegrationTest {
         endDate   = LocalDate.of(2025, 12, 31);
     }
 
-    // getTotalIncome
     @Test
-    @Order(1)
     public void testGetTotalIncomeWithinDateRange() {
 
         ArrayList<Bill> bills = billRepo.getAllBills(startDate, endDate);
@@ -54,7 +51,6 @@ public class StatisticsFullIntegrationTest {
     }
 
     @Test
-    @Order(2)
     public void testGetTotalIncomeWithEmptyBills() {
 
         double income = Statistics.getTotalIncome(startDate, endDate, new ArrayList<>());
@@ -64,7 +60,6 @@ public class StatisticsFullIntegrationTest {
 
     // getTotalCostOfPurchasingItem
     @Test
-    @Order(3)
     public void testGetTotalCostOfPurchasingItem() {
 
         double cost = Statistics.getTotalCostOfPurchasingItem(startDate, endDate);
@@ -73,16 +68,13 @@ public class StatisticsFullIntegrationTest {
     }
 
     @Test
-    @Order(4)
     public void testGetTotalCostOfPurchasingItemInvalidDates() {
 
         assertThrows(IllegalArgumentException.class, () ->
                 Statistics.getTotalCostOfPurchasingItem(endDate, startDate));
     }
 
-    // getTotalCostOfSalary
     @Test
-    @Order(5)
     public void testGetTotalCostOfSalary() {
 
         double calculatedSalary = Statistics.getTotalCostOfSalary();
@@ -97,9 +89,7 @@ public class StatisticsFullIntegrationTest {
         assertEquals(expectedSalary, calculatedSalary);
     }
 
-    // Statistics constructor integration
     @Test
-    @Order(6)
     public void testStatisticsConstructorWithRepositories() {
 
         Statistics statistics = new Statistics(

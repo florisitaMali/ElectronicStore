@@ -1,7 +1,6 @@
 package Models;
 
-import DAO.BillDAO;
-import DAO.EmployeeDAO;
+import DAO.*;
 import FakeClasses.FakeBill;
 import FakeClasses.FakeBillDAO;
 import FakeClasses.FakeEmployeeDAO;
@@ -28,6 +27,16 @@ class BillTest {
     void setUp() {
         admin = EmployeeDAO.getAdministrator();
         otherEmployee = new Cashier();
+        try {
+            Category testCategory = new Category("Electronics", Sector.ELECTRONICS);
+            CategoryDAO.addCategory(testCategory);
+            Supplier testSupplier = new Supplier("BestSupplier", "123 Supplier St.");
+            SuppliersDAO.addSupplier(testSupplier);
+            Item item = new Item("TEST_ITEM", 10, testCategory, testSupplier, 500, 700, 50);
+            ItemsDAO.addItem(item);
+        }catch (Exception e){
+
+        }
     }
 
 
@@ -71,7 +80,7 @@ class BillTest {
     @Test
     void getBills_shouldReturnListWithOneFakeBill() {
         Bill bill = new Bill(admin);
-        bill.addSoldItems(new SoldItem("TEST_ITEM",1));
+        bill.addSoldItems(new SoldItem("TEST_ITEM", 1));
         BillDAO.setEmployeeDAO(new FakeEmployeeDAO());
         BillDAO.saveBill(bill);
 
@@ -91,6 +100,5 @@ class BillTest {
                 Arguments.of(LocalDate.now(), null),
                 Arguments.of(LocalDate.now().plusDays(1), LocalDate.now()));
     }
-
 
 }

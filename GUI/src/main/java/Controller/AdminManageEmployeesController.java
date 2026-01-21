@@ -135,7 +135,7 @@ public class AdminManageEmployeesController {
                     System.out.println("Setting permission " + Permission.values()[i] + " to " + selectedEmployee.getAccessLevel().contains(Permission.values()[i]));
                     editDialog.getPermissionCheckBox().get(i).setSelected(selectedEmployee.getAccessLevel().contains(Permission.values()[i]));
                 }
-                //Show the dialog and wait for the result
+
                 employeeDialog.showAndWait().ifPresent(updatedEmployee -> {
                     if (updatedEmployee != null) {
 

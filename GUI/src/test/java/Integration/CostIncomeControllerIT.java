@@ -57,12 +57,10 @@ class CostIncomeControllerIT {
         TableView<Statistics> table = view.getStatisticsTableView();
         assertFalse(table.getItems().isEmpty(), "Table should have statistics");
 
-        // Last row is total
         Statistics total = table.getItems().get(table.getItems().size() - 1);
         assertTrue(total.getTotalIncome() >= 0, "Total income should be >= 0");
     }
 
-    // --- Invalid case: startDate null ---
     @Test
     void calculateStatisticsWithNullStartDateDoesNothing(FxRobot robot) {
         LocalDate end = LocalDate.now();
@@ -78,7 +76,6 @@ class CostIncomeControllerIT {
         assertTrue(table.getItems().isEmpty(), "Table should remain empty for null start date");
     }
 
-    // --- Invalid case: endDate null ---
     @Test
     void calculateStatisticsWithNullEndDateDoesNothing(FxRobot robot) {
         LocalDate start = LocalDate.now().minusDays(5);
@@ -94,7 +91,6 @@ class CostIncomeControllerIT {
         assertTrue(table.getItems().isEmpty(), "Table should remain empty for null end date");
     }
 
-    // --- Invalid case: startDate after endDate ---
     @Test
     void calculateStatisticsWithStartDateAfterEndDateDoesNothing(FxRobot robot) {
         LocalDate start = LocalDate.now();
@@ -113,11 +109,11 @@ class CostIncomeControllerIT {
 
     @Test
     void calculateStatisticsWithBillsAggregatesCorrectly(FxRobot robot) {
-        // Create test items
         try {
             CategoryDAO.addCategory(new Category("TEST_CATEGORY", Sector.COMPUTERS));
             SuppliersDAO.addSupplier(new Supplier("Test Supplier"));
-        }catch (Exception e){}
+        } catch (Exception e) {
+        }
         Item item1 = ItemsDAO.searchItem("TEST_ITEM_1");
         if (item1 == null) {
             item1 = new Item("TEST_ITEM_1", 20, new Category("TEST_CATEGORY", Sector.COMPUTERS), new Supplier("Test Supplier"), 100.0, 150.0, 2);
@@ -130,7 +126,7 @@ class CostIncomeControllerIT {
             ItemsDAO.addItem(item2);
         }
         double totalIncome = 0.0;
-        // Create bills
+
         Bill b1 = new Bill(view.getCurrentUser());
         b1.addSoldItems(new SoldItem("TEST_ITEM_1", 2));
         totalIncome = item1.getSellingPrice() * 2;
@@ -150,7 +146,7 @@ class CostIncomeControllerIT {
         robot.clickOn(view.getCalculateButton());
 
         TableView<Statistics> table = view.getStatisticsTableView();
-        // Include daily + total row
+
         assertEquals(2, table.getItems().size());
 
         Statistics daily = table.getItems().get(0);
@@ -159,38 +155,45 @@ class CostIncomeControllerIT {
         assertEquals(totalIncome, expectedIncome);
     }
 
-    //create the method here to delete all bills for a user
     public static void deleteAllBillsForUser(int employeeId) {
         Connection con = null;
         try {
             con = DBConnection.getConnection();
             con.setAutoCommit(false);
 
-            // First delete bill items (foreign key constraint)
-            String deleteItemsSql = """
-            DELETE bi FROM bill_items bi
-            JOIN bills b ON bi.bill_id = b.id
-            WHERE b.employee_id = ?
-        """;
+            String deleteItemsSql = " DELETE bi FROM bill_items bi JOIN bills b ON bi.bill_id = b.id WHERE b.employee_id = ? ";
+
             try (PreparedStatement ps = con.prepareStatement(deleteItemsSql)) {
-                ps.setInt(1, employeeId);
-                ps.executeUpdate();
-            }
+            ps.setInt(1, employeeId);
+            ps.executeUpdate();
+        }
 
-            // Then delete bills
-            String deleteBillsSql = "DELETE FROM bills WHERE employee_id = ?";
-            try (PreparedStatement ps = con.prepareStatement(deleteBillsSql)) {
-                ps.setInt(1, employeeId);
-                ps.executeUpdate();
-            }
+        String deleteBillsSql = "DELETE FROM bills WHERE employee_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(deleteBillsSql)) {
+            ps.setInt(1, employeeId);
+            ps.executeUpdate();
+        }
 
-            con.commit();
-        } catch (SQLException e) {
-            try { if (con != null) con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
-        } finally {
-            try { if (con != null) con.close(); } catch (SQLException ex) { ex.printStackTrace(); }
+        con.commit();
+    } catch(
+    SQLException e)
+
+    {
+        try {
+            if (con != null) con.rollback();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        e.printStackTrace();
+    } finally
+
+    {
+        try {
+            if (con != null) con.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
     }
+}
 
 }

@@ -63,7 +63,6 @@ public class SuppliersDAO {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 

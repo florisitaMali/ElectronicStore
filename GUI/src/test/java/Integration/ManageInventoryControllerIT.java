@@ -2,8 +2,6 @@ package Integration;
 
 import Controller.ManageInventoryController;
 import DAO.DBConnection;
-import DAO.ItemsDAO;
-import DAO.SuppliersDAO;
 import Models.*;
 import Views.ManageInventoryView;
 import javafx.scene.control.ComboBox;
@@ -38,7 +36,7 @@ class ManageInventoryControllerIT {
 
     @Start
     void start(Stage stage) {
-        admin = new Administrator(); // use admin for testing
+        admin = new Administrator();
         view = new ManageInventoryView(admin);
         controller = new ManageInventoryController(view);
         robot = new FxRobot();
@@ -53,19 +51,16 @@ class ManageInventoryControllerIT {
         view.getItemList().clear();
         view.getInventoryTable().getItems().clear();
 
-        // Add temporary test category and supplier
         addTestCategory("Test_Category", Sector.CAMERA);
         addTestSupplier("Test_Supplier");
     }
 
     @AfterEach
     void cleanupDatabase() {
-        // Remove the temporary test category and supplier
         deleteTestCategory("Test_Category");
         deleteTestSupplier("Test_Supplier");
     }
 
-    // =================== ADD ITEM ===================
     @ParameterizedTest
     @CsvSource({
             "'', 10, CAMERA_LAPTOPS, Test_Supplier, 10, 20, 5, 'itemName'",       // empty name
@@ -103,7 +98,6 @@ class ManageInventoryControllerIT {
         assertEquals(before + 1, after, "Valid item should be added");
     }
 
-    // =================== EDIT ITEM ===================
     @Test
     void editItem_withoutSelection_shouldShowAlert(FxRobot robot) {
         robot.interact(() -> view.getEditButton().fire());
@@ -127,19 +121,14 @@ class ManageInventoryControllerIT {
             view.getInventoryTable().getSelectionModel().select(original);
         });
 
-        // Open edit dialog
         robot.clickOn(view.getEditButton());
 
-        // Fill the dialog with the parameters
         fillItemDialog(robot, newName, newQuantity, category, supplierName, purchasedPrice, sellingPrice, stockLimit);
 
-        // Click save
         robot.clickOn("Save");
 
-        // Retrieve the edited item
         Item edited = view.getItemList().get(0);
 
-        // Assertions: check the invalid field did not change, others remain valid
         switch (invalidField) {
             case "itemName" -> assertEquals("Test", edited.getItemName(), "Item name should not change to invalid value");
             case "quantity" -> assertEquals(10, edited.getQuantity(), "Quantity should not change to invalid value");
@@ -150,7 +139,6 @@ class ManageInventoryControllerIT {
     }
 
 
-    // =================== DELETE ITEM ===================
     @Test
     void deleteItem_withoutSelection_shouldShowAlert(FxRobot robot) {
         robot.interact(() -> view.getDeleteButton().fire());
@@ -169,7 +157,6 @@ class ManageInventoryControllerIT {
         assertTrue(view.getItemList().isEmpty(), "Selected item should be deleted");
     }
 
-    // =================== SEARCH ITEM ===================
     @Test
     void searchItem_nonExistent_shouldReturnEmptyList(FxRobot robot) {
         Item item = new Item("Item1", 10, new Category("Test_Category", Sector.CAMERA), new Supplier("Test_Supplier"), 10, 20, 5);
@@ -184,32 +171,26 @@ class ManageInventoryControllerIT {
         assertTrue(view.getInventoryTable().getItems().isEmpty(), "Searching non-existent item should show empty table");
     }
 
-    // =================== HELPERS ===================
     private void fillItemDialog(FxRobot robot, String name, int quantity, String categoryName,
                                 String supplierName, double purchasedPrice, double sellingPrice, long stockLimit) {
-        // Step 2: Wait for dialog to appear and get dialog pane
         DialogPane dialogPane = robot.lookup(".dialog-pane").queryAs(DialogPane.class);
 
-        // Step 3: Fill in the fields using IDs
         robot.clickOn("#itemNameField").eraseText(20).write(name);
         robot.clickOn("#quantityField").eraseText(10).write(String.valueOf(quantity));
 
-        // Select the first RadioButton inside the category VBox
         RadioButton firstCategory = robot.from(dialogPane)
-                .lookup(".radio-button")   // all radio buttons inside dialog
+                .lookup(".radio-button")
                 .queryAllAs(RadioButton.class)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No category radio button found"));
 
         robot.interact(firstCategory::fire);
-        // Step 5: Select supplier
         ComboBox<Supplier> supplierComboBox = robot.from(dialogPane)
                 .lookup("#supplierComboBox")
                 .queryAs(ComboBox.class);
         robot.interact(() -> supplierComboBox.getSelectionModel().select(0));
 
-        // Step 6: Fill other numeric fields
         robot.clickOn("#purchasedPriceField").eraseText(10).write(String.valueOf(purchasedPrice));
         robot.clickOn("#sellingPriceField").eraseText(10).write(String.valueOf(sellingPrice));
         robot.clickOn("#stockLimitField").eraseText(10).write(String.valueOf(stockLimit));

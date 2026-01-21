@@ -26,14 +26,15 @@ class CategoryIT {
         Supplier supplier1 = new Supplier("TechSupplier");
         Supplier supplier2 = new Supplier("GadgetWorld");
 
-        Item item1 = new Item("Smartphone", 30, electronics,
-                supplier1, 300, 500, 10);
-        Item item2 = new Item("Tablet", 20, electronics,
-                supplier2, 200, 350, 5);
+        Item item1 = new Item("Smartphone", 30, electronics, supplier1, 300, 500, 10);
+        Item item2 = new Item("Tablet", 20, electronics, supplier2, 200, 350, 5);
+
         SuppliersDAO.addSupplier(supplier1);
         SuppliersDAO.addSupplier(supplier2);
+
         CategoryDAO.addCategory(electronics);
         CategoryDAO.addCategory(laptop);
+
         ItemsDAO.addItem(item1);
         ItemsDAO.addItem(item2);
     }

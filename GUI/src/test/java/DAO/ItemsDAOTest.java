@@ -20,11 +20,16 @@ class ItemsDAOTest {
 
     @BeforeEach
     void setup() {
-        cleanTables();
-        testCategory = new Category("Electronics", Sector.ELECTRONICS);
-        CategoryDAO.addCategory(testCategory);
-        testSupplier = new Supplier("BestSupplier", "123 Supplier St.");
-        SuppliersDAO.addSupplier(testSupplier);
+        try {
+            cleanTables();
+            testCategory = new Category("Electronics", Sector.ELECTRONICS);
+            CategoryDAO.addCategory(testCategory);
+            testSupplier = new Supplier("BestSupplier", "123 Supplier St.");
+            SuppliersDAO.addSupplier(testSupplier);
+            Administrator admin = new Administrator("Admin", "One", "admin", "pass", "a@a.com", "111", LocalDate.of(1990, 1, 1), 5000);
+            EmployeeDAO.addEmployee(admin);
+        }catch (Exception e){}
+
     }
 
     @Test

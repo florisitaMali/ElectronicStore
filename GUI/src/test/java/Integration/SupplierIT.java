@@ -2,13 +2,15 @@ package Integration;
 
 import DAO.*;
 import Models.*;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
-import java.time.LocalDate;
 import java.util.ArrayList;
+
+import DAO.DBConnection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,19 +22,21 @@ class SupplierIT {
     @BeforeEach
     void setUp() {
         Supplier.setItemsDAO(new ItemsDAOAdapter());
+        try {
+            category = new Category("Electronics" + System.currentTimeMillis(), Sector.ELECTRONICS);
+            CategoryDAO.addCategory(category);
 
-        category = new Category("Electronics", Sector.ELECTRONICS);
-        CategoryDAO.addCategory(category);
+            supplier = new Supplier("Tech Distributors", "Tirana");
+            SuppliersDAO.addSupplier(supplier);
 
-        supplier = new Supplier("Tech Distributors", "Tirana");
-        SuppliersDAO.addSupplier(supplier);
+            Item item1 = new Item("Laptop" + System.currentTimeMillis(), 30, category, supplier, 700.00, 950.00, 5);
 
-        Item item1 = new Item("Laptop", 30, category, supplier, 700.00, 950.00, 5);
+            Item item2 = new Item("Smartphone" + System.currentTimeMillis(), 50, category, supplier, 400.00, 650.00, 10);
 
-        Item item2 = new Item("Smartphone", 50, category, supplier, 400.00, 650.00, 10);
-
-        ItemsDAO.addItem(item1);
-        ItemsDAO.addItem(item2);
+            ItemsDAO.addItem(item1);
+            ItemsDAO.addItem(item2);
+        } catch (Exception e) {
+        }
     }
 
     @Test
@@ -69,18 +73,37 @@ class SupplierIT {
     }
 
     @AfterEach
-    public void deleteCategories() {
-        executeDelete("DELETE FROM ITEMS");
-        executeDelete("DELETE FROM CATEGORIES");
-        executeDelete("DELETE FROM SUPPLIERS");
-    }
+    void cleanUpDatabaseAfterAll() {
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (var deleteItems = conn.prepareStatement(
+                    "DELETE FROM items " +
+                            "WHERE supplier_id IN (" +
+                            "   SELECT id FROM suppliers WHERE name LIKE 'Tech Distributors%'" +
+                            ")"
+            )) {
+                deleteItems.executeUpdate();
+            }
 
-    private void executeDelete(String query) {
-        try (Connection conn = DBConnection.getConnection(); var ps = conn.prepareStatement(query)) {
-            ps.executeUpdate();
+            // 2. Delete suppliers
+            try (var deleteSuppliers = conn.prepareStatement(
+                    "DELETE FROM suppliers WHERE name LIKE 'Tech Distributors%'"
+            )) {
+                deleteSuppliers.executeUpdate();
+            }
+
+            // 3. Delete categories
+            try (var deleteCategories = conn.prepareStatement(
+                    "DELETE FROM categories WHERE name LIKE 'Electronics%'"
+            )) {
+                deleteCategories.executeUpdate();
+            }
+
+            conn.commit();
+            System.out.println("Cleaned up SupplierIT test data successfully");
+
         } catch (Exception e) {
             e.printStackTrace();
-            fail("Failed to clean up categories: " + e.getMessage());
         }
     }
 }

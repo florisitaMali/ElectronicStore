@@ -1,10 +1,9 @@
 package Integration;
 
 import Controller.AdminManageEmployeesController;
+import DAO.DBConnection;
 import DAO.EmployeeDAO;
-import Models.Employee;
-import Models.Role;
-import Models.Sector;
+import Models.*;
 import Views.AdminManageEmployeesView;
 import Views.EmployeesDialogBox;
 import javafx.scene.Scene;
@@ -12,6 +11,8 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.TableView;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +22,10 @@ import org.testfx.framework.junit5.Start;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +37,37 @@ class AdminManageEmployeesControllerIT {
     private AdminManageEmployeesView view;
     private Employee adminUser;
     private AdminManageEmployeesController controller;
+
+    @BeforeAll
+    static void setupTestEmployees() {
+        try (Connection conn = DBConnection.getConnection()) {
+
+            if (EmployeeDAO.getAdministrator() == null) {
+                EmployeeDAO.addAdministrator(
+                        new Administrator("Admin", "Test", "admin_test", "pass123", "admin@test.com",
+                                "1234567890", LocalDate.of(1998, 10, 2), 5000)
+                );
+            }
+
+            if (!EmployeeDAO.usernameExists("test_user_123")) {
+                EmployeeDAO.addEmployee(
+                        new Cashier("Test", "Employee", "test_user_123", "pass", "test@mail.com",
+                                "123456", LocalDate.of(1998, 10, 2), 3000, Sector.CAMERA)
+                );
+            }
+
+            if (!EmployeeDAO.usernameExists("test_user_124")) {
+                EmployeeDAO.addEmployee(
+                        new Manager("Test", "Manager", "test_user_124", "pass", "test@mail.com",
+                                "123456", LocalDate.of(1998, 10, 2), 3000)
+                );
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            fail("Failed to setup test employees");
+        }
+    }
 
     @Start
     void start(Stage stage) {
@@ -90,7 +125,7 @@ class AdminManageEmployeesControllerIT {
         });
 
         writeEmployeeData(robot,
-                "Test", "Employee", "test_user_123",
+                "Test", "Employee", "test_user_251",
                 "pass", "test@mail.com", "123456",
                 "3000", Role.CASHIER
         );
@@ -101,7 +136,7 @@ class AdminManageEmployeesControllerIT {
         int after = view.getEmployeeTable().getItems().size();
 
         assertEquals(before + 1, after);
-        assertTrue(EmployeeDAO.usernameExists("test_user_123"));
+        assertTrue(EmployeeDAO.usernameExists("test_user_251"));
     }
 
     @Test
@@ -120,7 +155,7 @@ class AdminManageEmployeesControllerIT {
         });
 
         writeEmployeeData(robot,
-                "Test5", "Manager", "test_user_159",
+                "Test5", "Manager", "test_user_223",
                 "pass", "test@mail.com", "123456",
                 "3000", Role.MANAGER
         );
@@ -131,7 +166,7 @@ class AdminManageEmployeesControllerIT {
         int after = view.getEmployeeTable().getItems().size();
 
         assertEquals(before + 1, after);
-        assertTrue(EmployeeDAO.usernameExists("test_user_123"));
+        assertTrue(EmployeeDAO.usernameExists("test_user_223"));
     }
 
     @Test
@@ -139,7 +174,6 @@ class AdminManageEmployeesControllerIT {
         TableView<Employee> table = view.getEmployeeTable();
         int before = table.getItems().size();
 
-        // Add first employee
         robot.clickOn(view.getAddButton());
         robot.interact(() -> {
             EmployeesDialogBox dialogBox = controller.getDialogBox();
@@ -158,7 +192,6 @@ class AdminManageEmployeesControllerIT {
         assertEquals(before + 1, afterFirst);
         assertTrue(EmployeeDAO.usernameExists("test_user_130"));
 
-        // Try adding duplicate username
         robot.clickOn(view.getAddButton());
         robot.interact(() -> {
             EmployeesDialogBox dialogBox = controller.getDialogBox();
@@ -166,7 +199,7 @@ class AdminManageEmployeesControllerIT {
         });
 
         writeEmployeeData(robot,
-                "TestDup", "EmployeeDup", "test_user_130", // duplicate username
+                "TestDup", "EmployeeDup", "test_user_130",
                 "pass", "dup@mail.com", "654321",
                 "3500", Role.CASHIER
         );
@@ -188,7 +221,7 @@ class AdminManageEmployeesControllerIT {
                                        String password, String email, String phone,
                                        String salary, String roleName) {
 
-        FxRobot robot = new FxRobot(); // <-- manually create
+        FxRobot robot = new FxRobot();
 
         Role role = Role.valueOf(roleName);
 
@@ -212,31 +245,27 @@ class AdminManageEmployeesControllerIT {
 
     @Test
     void editWithNoEmployeeSelectedShowsAlert(FxRobot robot) {
-        // Ensure no selection
         view.getEmployeeTable().getSelectionModel().clearSelection();
 
-        // Click edit
         robot.clickOn(view.getEditButton());
 
-        // Here we would assert that ShowAlert was called or dialog not shown
-        // If using TestFX, we can check that no dialog appears
         assertFalse(controller.getEmployeeDialog().isShowing());
     }
 
     @Test
     void editWithMultipleEmployeesSelectedUsesFirstOne(FxRobot robot) {
         TableView<Employee> table = view.getEmployeeTable();
-        if(table.getItems().size() < 2) return; // Skip if not enough employees
+        if(table.getItems().size() < 2) return;
 
-        // Select first two employees
+
         robot.interact(() -> {
             table.getSelectionModel().selectIndices(0, 2);
         });
 
-        // Click edit
+
         robot.clickOn(view.getEditButton());
 
-        // The dialog should open with the first selected employee
+
         Employee lastSelected = table.getItems().get(2);
         assertEquals(lastSelected.getName(), controller.getDialogBox().getNameField().getText());
     }
@@ -249,7 +278,6 @@ class AdminManageEmployeesControllerIT {
         selectEmployee(robot, table, emp);
         openEditDialog(robot);
 
-        // Change some fields
         double newSalary = emp.getSalary() + 1000;
         writeEmployeeFields(robot,
                 "EditedName", emp.getSurname(), emp.getUsername(),
@@ -257,7 +285,7 @@ class AdminManageEmployeesControllerIT {
                 String.valueOf(newSalary)
         );
 
-        robot.clickOn("Cashier"); // keep role same
+        robot.clickOn("Cashier");
         robot.clickOn(controller.getDialogBox().getPermissionCheckBox().get(0));
 
         saveDialog(robot);
@@ -285,33 +313,27 @@ class AdminManageEmployeesControllerIT {
         Role role = Role.valueOf(roleName);
 
         TableView<Employee> table = view.getEmployeeTable();
-        Employee emp = table.getItems().get(0); // Pick the first employee to edit
+        Employee emp = table.getItems().get(0);
 
         int before = table.getItems().size();
 
-        // Select the employee and click Edit
         robot.interact(() -> table.getSelectionModel().select(emp));
         robot.clickOn(view.getEditButton());
 
-        // Get the dialog and set test sectors if needed
         FxRobot dialogBox = robot.interact(() -> {
             EmployeesDialogBox db = controller.getDialogBox();
             if (role == Role.CASHIER) db.setTestSelectedSector(Sector.CAMERA);
             return db;
         });
 
-        // Write invalid data
         writeEmployeeFields(robot, name, surname, username, password, email, phone, salary);
 
-        // Click role and Save
         robot.clickOn(role == Role.CASHIER ? "Cashier" : "Manager");
         robot.clickOn("Save");
 
-        // Ensure that invalid data was not saved
         int after = table.getItems().size();
         assertEquals(before, after, "Employee table should not update for invalid data");
 
-        // Optional: you can also check that the original employee's fields remain unchanged
         Employee updatedEmp = table.getItems()
                 .stream()
                 .filter(e -> e.getId() == emp.getId())
@@ -331,19 +353,19 @@ class AdminManageEmployeesControllerIT {
         robot.clickOn("#surnameField").write(surname);
         robot.clickOn("#usernameField").write(username);
         robot.clickOn("#passwordField").write(password);
-        // Skip date field (already has a default)
+
         robot.clickOn("#phoneField").write(phone);
         robot.clickOn("#emailField").write(email);
         robot.clickOn("#salaryField").write(salary);
 
-        // Select role
+
         if(role == Role.MANAGER)
             robot.clickOn("#Manager");
         else {
             robot.clickOn("#Cashier");
         }
 
-        // Select permissions (example)
+
         robot.clickOn("GENERATEPRINTABLE_BILL");
         robot.clickOn("VIEWBILLS_AND_TOTAL_FOR_CURRENT_DAY");
     }
@@ -372,5 +394,42 @@ class AdminManageEmployeesControllerIT {
 
     private void saveDialog(FxRobot robot) {
         robot.clickOn("Save");
+    }
+
+    @AfterAll
+    static void cleanupTestEmployees() {
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement deleteSectors = conn.prepareStatement(
+                    "DELETE es FROM employee_sectors es " +
+                            "JOIN employees e ON es.employee_id = e.id " +
+                            "WHERE e.username LIKE 'test_user_%'"
+            )) {
+                deleteSectors.executeUpdate();
+            }
+
+            try (PreparedStatement deletePermissions = conn.prepareStatement(
+                    "DELETE ep FROM employee_permissions ep " +
+                            "JOIN employees e ON ep.employee_id = e.id " +
+                            "WHERE e.username LIKE 'test_user_%'"
+            )) {
+                deletePermissions.executeUpdate();
+            }
+
+            int deletedEmployees;
+            try (PreparedStatement deleteEmployees = conn.prepareStatement(
+                    "DELETE FROM employees WHERE username LIKE 'test_user_%'"
+            )) {
+                deletedEmployees = deleteEmployees.executeUpdate();
+            }
+
+            conn.commit();
+            System.out.println("Cleaned up test employees: " + deletedEmployees);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            fail("Failed to clean up test employees from database");
+        }
     }
 }

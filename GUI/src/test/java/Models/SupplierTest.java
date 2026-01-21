@@ -59,10 +59,7 @@ class SupplierTest {
         assertEquals(2, products.size());
         // Verify that each item's supplier matches this supplier
         for (Item item : products) {
-            assertEquals(
-                    supplier.getSupplierName(),
-                    item.getItemSupplier().getSupplierName()
-            );
+            assertEquals(supplier.getSupplierName(), item.getItemSupplier().getSupplierName());
         }
     }
 
@@ -84,7 +81,7 @@ class SupplierTest {
     @Test
     void getProducts_shouldReturnEmptyListIfNoItemsExist() {
         //Use a FakeItemsDAO that returns no items
-        FakeItemsDAO emptyItemsDAO = new FakeItemsDAO(){
+        FakeItemsDAO emptyItemsDAO = new FakeItemsDAO() {
             @Override
             public ArrayList<Item> getAllItems() {
                 return new ArrayList<>(); // Return empty list

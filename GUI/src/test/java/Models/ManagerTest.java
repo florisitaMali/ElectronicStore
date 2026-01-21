@@ -32,7 +32,6 @@ class ManagerTest {
 
     @Test
     void addSector_shouldAddSectorToList() {
-        // Use enum values directly
         manager.addSector(Sector.COMPUTERS);
         manager.addSector(Sector.MOBILE_DEVICES);
 

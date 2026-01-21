@@ -32,12 +32,13 @@ class SupplierDAOTest {
         Supplier s1 = new Supplier("Supplier1", "Address1");
         Supplier s2 = new Supplier("Supplier2", "Address2");
 
+        int before = SuppliersDAO.getAllSuppliers().size();
         SuppliersDAO.addSupplier(s1);
         SuppliersDAO.addSupplier(s2);
 
         List<Supplier> suppliers = SuppliersDAO.getAllSuppliers();
         assertNotNull(suppliers);
-        assertEquals(2, suppliers.size());
+        assertEquals(before + 2, suppliers.size());
 
         assertTrue(suppliers.stream().anyMatch(s -> s.getSupplierName().equals("Supplier1")));
         assertTrue(suppliers.stream().anyMatch(s -> s.getSupplierName().equals("Supplier2")));

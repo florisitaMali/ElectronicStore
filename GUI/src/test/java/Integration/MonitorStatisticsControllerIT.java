@@ -33,7 +33,6 @@ class MonitorStatisticsControllerIT {
         stage.show();
     }
 
-    // BASIC INITIALIZATION
     @Test
     void controllerInitializesCorrectly(FxRobot robot) {
         assertNotNull(controller);
@@ -49,7 +48,6 @@ class MonitorStatisticsControllerIT {
         assertNotNull(view.getStatsSummary());
     }
 
-    // STARTUP BEHAVIOR
     @Test
     void statisticsAreLoadedOnStartup(FxRobot robot) {
         String summary = view.getStatsSummary().getText();
@@ -57,7 +55,6 @@ class MonitorStatisticsControllerIT {
         assertFalse(summary.isEmpty());
     }
 
-    // USER INTERACTION
     @Test
     void datePickerInteractionTriggersUpdate(FxRobot robot) {
         robot.interact(() -> {
@@ -65,15 +62,11 @@ class MonitorStatisticsControllerIT {
             view.getEndDatePicker().setValue(LocalDate.now());
         });
 
-        // Fire events (controller listens to these)
         robot.interact(() -> view.getStartDatePicker().fireEvent(new javafx.event.ActionEvent()));
         robot.interact(() -> view.getEndDatePicker().fireEvent(new javafx.event.ActionEvent()));
 
-        // If we reach here, updateStatistics was executed
         assertNotNull(view.getStatsSummary().getText());
     }
-
-    // UI CONSISTENCY
 
     @Test
     void chartsArePresentAndAccessible(FxRobot robot) {

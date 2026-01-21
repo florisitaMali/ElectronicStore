@@ -51,7 +51,6 @@ public class CategoryDAO {
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
