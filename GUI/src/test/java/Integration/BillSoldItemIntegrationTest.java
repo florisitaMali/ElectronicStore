@@ -1,6 +1,5 @@
 package Integration;
 
-import FakeClasses.FakeBill;
 import FakeClasses.FakeBillDAO;
 import Models.Bill;
 import Models.SoldItem;

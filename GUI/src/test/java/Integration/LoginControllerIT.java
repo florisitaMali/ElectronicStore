@@ -164,7 +164,6 @@ class LoginControllerIT {
 
         robot.clickOn(loginView.getLoginBtn());
 
-        // Should move to EmployeesMainPage
         assertNotEquals(stage.getScene().getRoot(), loginView.getView());
     }
 

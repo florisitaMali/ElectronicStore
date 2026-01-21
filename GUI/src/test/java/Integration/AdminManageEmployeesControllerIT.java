@@ -43,24 +43,15 @@ class AdminManageEmployeesControllerIT {
         try (Connection conn = DBConnection.getConnection()) {
 
             if (EmployeeDAO.getAdministrator() == null) {
-                EmployeeDAO.addAdministrator(
-                        new Administrator("Admin", "Test", "admin_test", "pass123", "admin@test.com",
-                                "1234567890", LocalDate.of(1998, 10, 2), 5000)
-                );
+                EmployeeDAO.addAdministrator(new Administrator("Admin", "Test", "admin_test", "pass123", "admin@test.com", "1234567890", LocalDate.of(1998, 10, 2), 5000));
             }
 
             if (!EmployeeDAO.usernameExists("test_user_123")) {
-                EmployeeDAO.addEmployee(
-                        new Cashier("Test", "Employee", "test_user_123", "pass", "test@mail.com",
-                                "123456", LocalDate.of(1998, 10, 2), 3000, Sector.CAMERA)
-                );
+                EmployeeDAO.addEmployee(new Cashier("Test", "Employee", "test_user_123", "pass", "test@mail.com", "123456", LocalDate.of(1998, 10, 2), 3000, Sector.CAMERA));
             }
 
             if (!EmployeeDAO.usernameExists("test_user_124")) {
-                EmployeeDAO.addEmployee(
-                        new Manager("Test", "Manager", "test_user_124", "pass", "test@mail.com",
-                                "123456", LocalDate.of(1998, 10, 2), 3000)
-                );
+                EmployeeDAO.addEmployee(new Manager("Test", "Manager", "test_user_124", "pass", "test@mail.com", "123456", LocalDate.of(1998, 10, 2), 3000));
             }
 
         } catch (SQLException e) {
@@ -91,6 +82,7 @@ class AdminManageEmployeesControllerIT {
         TableView<Employee> table = view.getEmployeeTable();
         int originalSize = table.getItems().size();
         assertTrue(originalSize > 0);
+
         robot.clickOn(view.getSearchField()).write("");
         assertTrue(table.getItems().size() == originalSize);
 
@@ -124,11 +116,7 @@ class AdminManageEmployeesControllerIT {
             dialogBox.setTestSelectedSector(Sector.CAMERA);
         });
 
-        writeEmployeeData(robot,
-                "Test", "Employee", "test_user_251",
-                "pass", "test@mail.com", "123456",
-                "3000", Role.CASHIER
-        );
+        writeEmployeeData(robot, "Test", "Employee", "test_user_251", "pass", "test@mail.com", "123456", "3000", Role.CASHIER);
 
         robot.clickOn("Cashier");
         robot.clickOn("Save");
@@ -154,11 +142,7 @@ class AdminManageEmployeesControllerIT {
             dialogBox.setTestSelectedSectors(sectors);
         });
 
-        writeEmployeeData(robot,
-                "Test5", "Manager", "test_user_223",
-                "pass", "test@mail.com", "123456",
-                "3000", Role.MANAGER
-        );
+        writeEmployeeData(robot, "Test5", "Manager", "test_user_223", "pass", "test@mail.com", "123456", "3000", Role.MANAGER);
 
         robot.clickOn("Save");
 
@@ -180,11 +164,7 @@ class AdminManageEmployeesControllerIT {
             dialogBox.setTestSelectedSector(Sector.CAMERA);
         });
 
-        writeEmployeeData(robot,
-                "Test1", "Employee1", "test_user_130",
-                "pass", "test@mail.com", "123456",
-                "3000", Role.CASHIER
-        );
+        writeEmployeeData(robot, "Test1", "Employee1", "test_user_130", "pass", "test@mail.com", "123456", "3000", Role.CASHIER);
         robot.clickOn("Cashier");
         robot.clickOn("Save");
 
@@ -198,11 +178,7 @@ class AdminManageEmployeesControllerIT {
             dialogBox.setTestSelectedSector(Sector.CAMERA);
         });
 
-        writeEmployeeData(robot,
-                "TestDup", "EmployeeDup", "test_user_130",
-                "pass", "dup@mail.com", "654321",
-                "3500", Role.CASHIER
-        );
+        writeEmployeeData(robot, "TestDup", "EmployeeDup", "test_user_130", "pass", "dup@mail.com", "654321", "3500", Role.CASHIER);
         robot.clickOn("Save");
 
         int afterDuplicate = table.getItems().size();
@@ -210,16 +186,8 @@ class AdminManageEmployeesControllerIT {
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "'', Employee, test_user_127, pass, test@mail.com, 123456, 3000, CASHIER",
-            "Test2, '', test_user_128, pass, test@mail.com, 123456, 3000, CASHIER",
-            "Test3, Employee3, '', pass, test@mail.com, 123456, 3000, CASHIER",
-            "Test4, Employee4, test_user_129, pass, invalidEmail, 123456, 3000, CASHIER",
-            "Test5, Employee5, test_user_130, pass, test@mail.com, 123456, -1000, CASHIER"
-    })
-    void addEmployeeRejectsInvalidData(String name, String surname, String username,
-                                       String password, String email, String phone,
-                                       String salary, String roleName) {
+    @CsvSource({"'', Employee, test_user_127, pass, test@mail.com, 123456, 3000, CASHIER", "Test2, '', test_user_128, pass, test@mail.com, 123456, 3000, CASHIER", "Test3, Employee3, '', pass, test@mail.com, 123456, 3000, CASHIER", "Test4, Employee4, test_user_129, pass, invalidEmail, 123456, 3000, CASHIER", "Test5, Employee5, test_user_130, pass, test@mail.com, 123456, -1000, CASHIER"})
+    void addEmployeeRejectsInvalidData(String name, String surname, String username, String password, String email, String phone, String salary, String roleName) {
 
         FxRobot robot = new FxRobot();
 
@@ -255,7 +223,7 @@ class AdminManageEmployeesControllerIT {
     @Test
     void editWithMultipleEmployeesSelectedUsesFirstOne(FxRobot robot) {
         TableView<Employee> table = view.getEmployeeTable();
-        if(table.getItems().size() < 2) return;
+        if (table.getItems().size() < 2) return;
 
 
         robot.interact(() -> {
@@ -279,36 +247,22 @@ class AdminManageEmployeesControllerIT {
         openEditDialog(robot);
 
         double newSalary = emp.getSalary() + 1000;
-        writeEmployeeFields(robot,
-                "EditedName", emp.getSurname(), emp.getUsername(),
-                emp.getPassword(), emp.getEmail(), emp.getPhoneNumber(),
-                String.valueOf(newSalary)
-        );
+        writeEmployeeFields(robot, "EditedName", emp.getSurname(), emp.getUsername(), emp.getPassword(), emp.getEmail(), emp.getPhoneNumber(), String.valueOf(newSalary));
 
         robot.clickOn("Cashier");
         robot.clickOn(controller.getDialogBox().getPermissionCheckBox().get(0));
 
         saveDialog(robot);
 
-        Employee updated = table.getItems().stream()
-                .filter(e -> e.getId() == emp.getId())
-                .findFirst().orElseThrow();
+        Employee updated = table.getItems().stream().filter(e -> e.getId() == emp.getId()).findFirst().orElseThrow();
         assertEquals("EditedName", updated.getName());
         assertEquals(newSalary, updated.getSalary());
     }
 
 
     @ParameterizedTest
-    @CsvSource({
-            "'', Employee, test_user_127, pass, test@mail.com, 123456, 3000, CASHIER",
-            "Test2, '', test_user_128, pass, test@mail.com, 123456, 3000, CASHIER",
-            "Test3, Employee3, '', pass, test@mail.com, 123456, 3000, CASHIER",
-            "Test4, Employee4, test_user_129, pass, invalidEmail, 123456, 3000, CASHIER",
-            "Test5, Employee5, test_user_130, pass, test@mail.com, 123456, -1000, MANAGER"
-    })
-    void editEmployeeWithInvalidDataShowsError(String name, String surname, String username,
-                                               String password, String email, String phone,
-                                               String salary, String roleName, FxRobot robot) {
+    @CsvSource({"'', Employee, test_user_127, pass, test@mail.com, 123456, 3000, CASHIER", "Test2, '', test_user_128, pass, test@mail.com, 123456, 3000, CASHIER", "Test3, Employee3, '', pass, test@mail.com, 123456, 3000, CASHIER", "Test4, Employee4, test_user_129, pass, invalidEmail, 123456, 3000, CASHIER", "Test5, Employee5, test_user_130, pass, test@mail.com, 123456, -1000, MANAGER"})
+    void editEmployeeWithInvalidDataShowsError(String name, String surname, String username, String password, String email, String phone, String salary, String roleName, FxRobot robot) {
 
         Role role = Role.valueOf(roleName);
 
@@ -334,20 +288,13 @@ class AdminManageEmployeesControllerIT {
         int after = table.getItems().size();
         assertEquals(before, after, "Employee table should not update for invalid data");
 
-        Employee updatedEmp = table.getItems()
-                .stream()
-                .filter(e -> e.getId() == emp.getId())
-                .findFirst()
-                .orElseThrow();
+        Employee updatedEmp = table.getItems().stream().filter(e -> e.getId() == emp.getId()).findFirst().orElseThrow();
         assertEquals(emp.getName(), updatedEmp.getName(), "Name should not have changed");
         assertEquals(emp.getUsername(), updatedEmp.getUsername(), "Username should not have changed");
     }
 
 
-    private void writeEmployeeData(FxRobot robot,
-                                   String name, String surname, String username,
-                                   String password, String email, String phone,
-                                   String salary, Role role) {
+    private void writeEmployeeData(FxRobot robot, String name, String surname, String username, String password, String email, String phone, String salary, Role role) {
 
         robot.clickOn("#nameField").write(name);
         robot.clickOn("#surnameField").write(surname);
@@ -359,8 +306,7 @@ class AdminManageEmployeesControllerIT {
         robot.clickOn("#salaryField").write(salary);
 
 
-        if(role == Role.MANAGER)
-            robot.clickOn("#Manager");
+        if (role == Role.MANAGER) robot.clickOn("#Manager");
         else {
             robot.clickOn("#Cashier");
         }
@@ -379,10 +325,7 @@ class AdminManageEmployeesControllerIT {
         robot.interact(() -> assertNotNull(controller.getDialogBox(), "Dialog box must be initialized"));
     }
 
-    private void writeEmployeeFields(FxRobot robot,
-                                     String name, String surname, String username,
-                                     String password, String email, String phone,
-                                     String salary) {
+    private void writeEmployeeFields(FxRobot robot, String name, String surname, String username, String password, String email, String phone, String salary) {
         robot.clickOn("#nameField").eraseText(20).write(name);
         robot.clickOn("#surnameField").eraseText(20).write(surname);
         robot.clickOn("#usernameField").eraseText(20).write(username);
@@ -401,26 +344,16 @@ class AdminManageEmployeesControllerIT {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
 
-            try (PreparedStatement deleteSectors = conn.prepareStatement(
-                    "DELETE es FROM employee_sectors es " +
-                            "JOIN employees e ON es.employee_id = e.id " +
-                            "WHERE e.username LIKE 'test_user_%'"
-            )) {
+            try (PreparedStatement deleteSectors = conn.prepareStatement("DELETE es FROM employee_sectors es " + "JOIN employees e ON es.employee_id = e.id " + "WHERE e.username LIKE 'test_user_%'")) {
                 deleteSectors.executeUpdate();
             }
 
-            try (PreparedStatement deletePermissions = conn.prepareStatement(
-                    "DELETE ep FROM employee_permissions ep " +
-                            "JOIN employees e ON ep.employee_id = e.id " +
-                            "WHERE e.username LIKE 'test_user_%'"
-            )) {
+            try (PreparedStatement deletePermissions = conn.prepareStatement("DELETE ep FROM employee_permissions ep " + "JOIN employees e ON ep.employee_id = e.id " + "WHERE e.username LIKE 'test_user_%'")) {
                 deletePermissions.executeUpdate();
             }
 
             int deletedEmployees;
-            try (PreparedStatement deleteEmployees = conn.prepareStatement(
-                    "DELETE FROM employees WHERE username LIKE 'test_user_%'"
-            )) {
+            try (PreparedStatement deleteEmployees = conn.prepareStatement("DELETE FROM employees WHERE username LIKE 'test_user_%'")) {
                 deletedEmployees = deleteEmployees.executeUpdate();
             }
 

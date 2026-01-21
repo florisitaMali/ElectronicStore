@@ -76,20 +76,17 @@ class BillDAOTest {
 
     @Test
     void getItemsSoldStatistics_startDateNull_throwsException() {
-        assertThrows(RuntimeException.class,
-                () -> BillDAO.getItemsSoldStatistics(null, LocalDate.now()));
+        assertThrows(RuntimeException.class, () -> BillDAO.getItemsSoldStatistics(null, LocalDate.now()));
     }
 
     @Test
     void getItemsSoldStatistics_endDateNull_throwsException() {
-        assertThrows(RuntimeException.class,
-                () -> BillDAO.getItemsSoldStatistics(LocalDate.now(), null));
+        assertThrows(RuntimeException.class, () -> BillDAO.getItemsSoldStatistics(LocalDate.now(), null));
     }
 
     @Test
     void getItemsSoldStatistics_startAfterEnd_returnsEmptyMap() {
-        Map<String, Integer> stats =
-                BillDAO.getItemsSoldStatistics(LocalDate.now(), LocalDate.now().minusDays(1));
+        Map<String, Integer> stats = BillDAO.getItemsSoldStatistics(LocalDate.now(), LocalDate.now().minusDays(1));
 
         assertTrue(stats.isEmpty());
     }
@@ -98,8 +95,7 @@ class BillDAOTest {
     void getItemsSoldStatistics_validDates_noBills_returnsEmptyMap() {
         clearDatabase();
 
-        Map<String, Integer> stats =
-                BillDAO.getItemsSoldStatistics(LocalDate.now().minusDays(5), LocalDate.now());
+        Map<String, Integer> stats = BillDAO.getItemsSoldStatistics(LocalDate.now().minusDays(5), LocalDate.now());
 
         assertTrue(stats.isEmpty());
     }
@@ -108,8 +104,7 @@ class BillDAOTest {
     void getItemsSoldStatistics_billsOutOfRange_returnsEmptyMap() {
         saveBillWithDate(LocalDateTime.now().minusDays(10));
 
-        Map<String, Integer> stats =
-                BillDAO.getItemsSoldStatistics(LocalDate.now().minusDays(2), LocalDate.now());
+        Map<String, Integer> stats = BillDAO.getItemsSoldStatistics(LocalDate.now().minusDays(2), LocalDate.now());
 
         assertTrue(stats.isEmpty());
     }
@@ -118,8 +113,7 @@ class BillDAOTest {
     void getItemsSoldStatistics_validBills_returnsCorrectStats() {
         saveOneValidBill();
 
-        Map<String, Integer> stats =
-                BillDAO.getItemsSoldStatistics(LocalDate.now().minusDays(1), LocalDate.now());
+        Map<String, Integer> stats = BillDAO.getItemsSoldStatistics(LocalDate.now().minusDays(1), LocalDate.now());
 
         assertEquals(1, stats.size());
         assertEquals(2, stats.get(testItem1.getItemName()));
@@ -171,50 +165,40 @@ class BillDAOTest {
     }
 
     private void insertBaseData() {
-        try (Connection con = DBConnection.getConnection();
-             Statement stmt = con.createStatement()) {
+        try (Connection con = DBConnection.getConnection(); Statement stmt = con.createStatement()) {
 
             // Insert test category
             stmt.execute("INSERT INTO categories(id, name, sector) VALUES (1000, 'TEST_CATEGORY', 1000) ON DUPLICATE KEY UPDATE name=name");
 
             // Insert test supplier
             stmt.execute("INSERT INTO suppliers(id, name, address) VALUES (1000, 'TEST_SUPPLIER', '123 Test Ave') ON DUPLICATE KEY UPDATE name=name");
-        }catch (Exception ex){
+        } catch (Exception ex) {
 
         }
 
         // Add a test cashier if not exists
         validEmployee = EmployeeDAO.searchEmployee("cashier_test", Role.CASHIER);
         if (validEmployee == null) {
-            validEmployee = new Cashier(
-                    "Cashier", "Test", "cashier_test", "pass123", "cashier@test.com", "1234567890",
-                    LocalDate.of(1995, 2, 2), 2000, Sector.CAMERA
-            );
+            validEmployee = new Cashier("Cashier", "Test", "cashier_test", "pass123", "cashier@test.com", "1234567890", LocalDate.of(1995, 2, 2), 2000, Sector.CAMERA);
             EmployeeDAO.addEmployee(validEmployee);
         }
 
         // Add test items
         testItem1 = ItemsDAO.searchItem("TEST_ITEM_1");
         if (testItem1 == null) {
-            testItem1 = new Item("TEST_ITEM_1", 50,
-                    new Category("TEST_CATEGORY", Sector.COMPUTERS),
-                    new Supplier("TEST_SUPPLIER", "123 Test Ave"),
-                    100, 150, 20);
+            testItem1 = new Item("TEST_ITEM_1", 50, new Category("TEST_CATEGORY", Sector.COMPUTERS), new Supplier("TEST_SUPPLIER", "123 Test Ave"), 100, 150, 20);
             ItemsDAO.addItem(testItem1);
         }
 
         testItem2 = ItemsDAO.searchItem("TEST_ITEM_2");
         if (testItem2 == null) {
-            testItem2 = new Item("TEST_ITEM_2", 30,
-                    new Category("TEST_CATEGORY", Sector.CAMERA),
-                    new Supplier("TEST_SUPPLIER", "123 Test Ave"),
-                    50, 100, 10);
+            testItem2 = new Item("TEST_ITEM_2", 30, new Category("TEST_CATEGORY", Sector.CAMERA), new Supplier("TEST_SUPPLIER", "123 Test Ave"), 50, 100, 10);
             ItemsDAO.addItem(testItem2);
         }
     }
 
     @AfterEach
-    void deleteDatabase(){
+    void deleteDatabase() {
         clearDatabase();
     }
 
@@ -225,9 +209,9 @@ class BillDAOTest {
     }
 
     private void saveBillWithDate(LocalDateTime date) {
-        Bill bill = new Bill(validEmployee){
+        Bill bill = new Bill(validEmployee) {
             @Override
-            public LocalDateTime getSaleDate(){
+            public LocalDateTime getSaleDate() {
                 return date;
             }
         };
