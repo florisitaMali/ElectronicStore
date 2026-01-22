@@ -23,8 +23,6 @@ public class StatisticsBillIntegrationTest {
 
         double result = Statistics.getTotalCostOfPurchasingItem(start, end);
 
-        // FakeBill returns cost = 60
-        // FakeItemsDAO adds unsold items: (10 + 20)
         assertEquals(3060.0, result);
     }
 }

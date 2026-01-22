@@ -17,7 +17,6 @@ public class FakeCategoryDAO extends CategoryDAO {
     private static List<Category> categories = new ArrayList<>();
     private static List<Item> items = new ArrayList<>();
 
-    /* ===================== SETUP METHODS ===================== */
 
     public static void setCategories(List<Category> fakeCategories) {
         categories = fakeCategories;
@@ -32,7 +31,6 @@ public class FakeCategoryDAO extends CategoryDAO {
         items.clear();
     }
 
-    /* ===================== OVERRIDDEN METHODS ===================== */
 
     public static ArrayList<Category> getCategories() {
         return new ArrayList<>(categories);
@@ -60,7 +58,6 @@ public class FakeCategoryDAO extends CategoryDAO {
         return result;
     }
 
-    /* ===================== OPTIONAL (NO-OP) ===================== */
 
     public static void addCategory(Category c) {
         categories.add(c);

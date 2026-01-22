@@ -14,7 +14,6 @@ public class FakeManager extends Manager {
 
     private final ArrayList<Sector> sectors = new ArrayList<>();
 
-    // Default constructor
     public FakeManager() {
         super(); // uses Manager default constructor
     }
